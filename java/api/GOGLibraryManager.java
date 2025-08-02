@@ -31,7 +31,6 @@ public class GOGLibraryManager {
     private static final String LIBRARY_FILTERED_URL = "https://api.gog.com/user/data/games";
     private static final String GAME_DETAILS_URL = "https://api.gog.com/products/%d?expand=downloads";
     private static final String DOWNLOAD_LINK_URL = "https://api.gog.com/products/%d/downlink/download/%s";
-    private static final String DOWNLINK_INFO_URL = "https://api.gog.com/products/%d/downlink/%s";
     
     // Fallback URLs para embed.gog.com se api.gog.com falhar
     private static final String EMBED_USER_GAMES_URL = "https://embed.gog.com/user/data/games";
@@ -599,7 +598,7 @@ public class GOGLibraryManager {
         
         Log.d(TAG, "Getting download link for game " + gameId + ", link " + downlinkId);
         
-        String url = String.format(DOWNLOAD_LINK_URL, gameId, downlinkId);
+        String url = String.format(DOWNLOAD_LINK_URL, gameId, downlinkId) + "?type=" + type;
         
         Request request = new Request.Builder()
                 .url(url)
