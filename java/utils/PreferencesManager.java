@@ -124,13 +124,31 @@ public class PreferencesManager {
         return (currentTime - loginTime) < oneHour;
     }
     
-    // Métodos de download
+    // Métodos de download com SAF
+    private static final String KEY_DOWNLOAD_URI = "download_uri";
+    
     public void setDownloadPath(String path) {
         editor.putString(KEY_DOWNLOAD_PATH, path);
         editor.apply();
     }
     
+    public void setDownloadUri(String uriString) {
+        editor.putString(KEY_DOWNLOAD_URI, uriString);
+        editor.apply();
+    }
+    
+    public String getDownloadUri() {
+        return preferences.getString(KEY_DOWNLOAD_URI, null);
+    }
+    
+    public boolean hasDownloadLocationConfigured() {
+        String uri = getDownloadUri();
+        String path = preferences.getString(KEY_DOWNLOAD_PATH, null);
+        return (uri != null && !uri.isEmpty()) || (path != null && !path.isEmpty());
+    }
+    
     public String getDownloadPath() {
+        // Priorizar URI se disponível, senão usar path legado
         String savedPath = preferences.getString(KEY_DOWNLOAD_PATH, null);
         if (savedPath != null && !savedPath.isEmpty()) {
             return savedPath;
@@ -138,6 +156,10 @@ public class PreferencesManager {
         
         // Retorna caminho padrão se não houver um salvo
         return getDefaultDownloadPath();
+    }
+    
+    public String getDownloadPathLegacy() {
+        return preferences.getString(KEY_DOWNLOAD_PATH, null);
     }
     
     public String getDefaultDownloadPath() {

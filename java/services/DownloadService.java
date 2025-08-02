@@ -20,9 +20,14 @@ import com.example.gogdownloader.database.DatabaseHelper;
 import com.example.gogdownloader.models.DownloadLink;
 import com.example.gogdownloader.models.Game;
 import com.example.gogdownloader.utils.PreferencesManager;
+import com.example.gogdownloader.utils.SAFDownloadManager;
+
+import androidx.documentfile.provider.DocumentFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +59,7 @@ public class DownloadService extends Service {
     private GOGLibraryManager libraryManager;
     private DatabaseHelper databaseHelper;
     private PreferencesManager preferencesManager;
+    private SAFDownloadManager safDownloadManager;
     
     public static Intent createDownloadIntent(Context context, Game game) {
         Intent intent = new Intent(context, DownloadService.class);
@@ -80,6 +86,7 @@ public class DownloadService extends Service {
         libraryManager = new GOGLibraryManager(this);
         databaseHelper = new DatabaseHelper(this);
         preferencesManager = new PreferencesManager(this);
+        safDownloadManager = new SAFDownloadManager(this);
         
         createNotificationChannel();
         
@@ -415,7 +422,36 @@ public class DownloadService extends Service {
                 throw new IOException("URL de download inválida");
             }
             
-            // Criar arquivo de destino
+            Log.d(TAG, "Starting download using SAF for: " + game.getTitle());
+            
+            // Tentar usar SAF primeiro
+            if (safDownloadManager.hasDownloadLocationConfigured()) {
+                downloadFileUsingSAF();
+            } else {
+                // Fallback para método legado
+                downloadFileLegacy();
+            }
+        }
+        
+        private void downloadFileUsingSAF() throws IOException {
+            Log.d(TAG, "Using SAF for download: " + game.getTitle());
+            
+            // Criar arquivo usando SAF
+            DocumentFile downloadFile = safDownloadManager.createDownloadFile(game, downloadLink);
+            if (downloadFile == null) {
+                throw new IOException("Não foi possível criar arquivo de download");
+            }
+            
+            Log.d(TAG, "Created download file: " + downloadFile.getName());
+            
+            // Simular download usando SAF
+            simulateDownloadSAF(downloadFile);
+        }
+        
+        private void downloadFileLegacy() throws IOException {
+            Log.d(TAG, "Using legacy method for download: " + game.getTitle());
+            
+            // Criar arquivo de destino (método original)
             String downloadPath = preferencesManager.getDownloadPath();
             File gameDir = new File(downloadPath, game.getTitle().replaceAll("[^a-zA-Z0-9.-]", "_"));
             if (!gameDir.exists()) {
@@ -427,6 +463,67 @@ public class DownloadService extends Service {
             
             // Para demonstração, simular download criando arquivo de teste
             simulateDownload(outputFile);
+        }
+        
+        private void simulateDownloadSAF(DocumentFile outputFile) throws IOException {
+            long totalBytes = downloadLink.getSize();
+            if (totalBytes <= 0) {
+                totalBytes = 100L * 1024 * 1024; // 100MB padrão
+            }
+            
+            Log.d(TAG, "Starting SAF download simulation. Total bytes: " + totalBytes);
+            
+            // Simular download com progresso realista usando SAF
+            try (OutputStream outputStream = safDownloadManager.getOutputStream(outputFile)) {
+                long bytesDownloaded = 0;
+                byte[] buffer = new byte[8192];
+                
+                // Velocidade simulada: ~10MB/s
+                long delayPerChunk = 1; // 1ms por chunk de 8KB = ~8MB/s
+                
+                while (bytesDownloaded < totalBytes && !cancelled) {
+                    // Escrever chunk
+                    long remainingBytes = totalBytes - bytesDownloaded;
+                    int chunkSize = (int) Math.min(buffer.length, remainingBytes);
+                    
+                    // Criar dados de teste
+                    for (int i = 0; i < chunkSize; i++) {
+                        buffer[i] = (byte) (i % 256);
+                    }
+                    
+                    outputStream.write(buffer, 0, chunkSize);
+                    bytesDownloaded += chunkSize;
+                    
+                    // Atualizar progresso
+                    onDownloadProgress(game, bytesDownloaded, totalBytes);
+                    
+                    // Simular delay de rede
+                    try {
+                        Thread.sleep(delayPerChunk);
+                    } catch (InterruptedException e) {
+                        if (cancelled) return;
+                        throw new IOException("Download interrompido");
+                    }
+                }
+                
+                if (cancelled) {
+                    // Deletar arquivo parcial
+                    outputFile.delete();
+                    return;
+                }
+                
+                // Download completo
+                String filePath = outputFile.getUri().toString();
+                Log.d(TAG, "SAF download completed: " + filePath);
+                onDownloadComplete(game, filePath);
+                
+            } catch (IOException e) {
+                // Deletar arquivo em caso de erro
+                if (outputFile.exists()) {
+                    outputFile.delete();
+                }
+                throw e;
+            }
         }
         
         private void simulateDownload(File outputFile) throws IOException {

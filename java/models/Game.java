@@ -1,5 +1,7 @@
 package com.example.gogdownloader.models;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -78,19 +80,23 @@ public class Game implements Serializable {
         
         // Garantir que URLs de imagem tenham protocolo
         if (game.coverImage != null && !game.coverImage.isEmpty()) {
+            String originalCoverImage = game.coverImage;
             if (game.coverImage.startsWith("//")) {
                 game.coverImage = "https:" + game.coverImage;
             } else if (!game.coverImage.startsWith("http")) {
                 game.coverImage = "https://" + game.coverImage;
             }
+            Log.d("Game", "Cover image: '" + originalCoverImage + "' -> '" + game.coverImage + "'");
         }
         
         if (game.backgroundImage != null && !game.backgroundImage.isEmpty()) {
+            String originalBackgroundImage = game.backgroundImage;
             if (game.backgroundImage.startsWith("//")) {
                 game.backgroundImage = "https:" + game.backgroundImage;
             } else if (!game.backgroundImage.startsWith("http")) {
                 game.backgroundImage = "https://" + game.backgroundImage;
             }
+            Log.d("Game", "Background image: '" + originalBackgroundImage + "' -> '" + game.backgroundImage + "'");
         }
         
         // Descrição

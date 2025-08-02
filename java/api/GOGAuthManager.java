@@ -307,25 +307,32 @@ public class GOGAuthManager {
      * @param callback Callback para resultado
      */
     public void getUserData(String authToken, UserInfoCallback callback) {
-        Log.d(TAG, "Getting user data from userData.json");
+        Log.d(TAG, "=== GETTING USER DATA FROM userData.json ===");
+        Log.d(TAG, "Token length: " + (authToken != null ? authToken.length() : "null"));
         
         if (authToken == null || authToken.trim().isEmpty()) {
+            Log.e(TAG, "AUTH TOKEN IS EMPTY!");
             callback.onError("Token de acesso é obrigatório");
             return;
         }
         
+        String url = USER_DATA_URL;
+        Log.d(TAG, "Request URL: " + url);
+        
         Request request = new Request.Builder()
-                .url(USER_DATA_URL)
+                .url(url)
                 .get()
                 .addHeader("Authorization", "Bearer " + authToken)
                 .addHeader("User-Agent", "GOGDownloaderApp/1.0")
                 .addHeader("Accept", "application/json")
                 .build();
         
+        Log.d(TAG, "Making request to: " + url);
+        
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.e(TAG, "User data network error", e);
+                Log.e(TAG, "=== USER DATA NETWORK ERROR ===", e);
                 callback.onError("Erro de conexão: " + e.getMessage());
             }
             
@@ -334,26 +341,41 @@ public class GOGAuthManager {
                 try (ResponseBody responseBody = response.body()) {
                     String responseString = responseBody != null ? responseBody.string() : "";
                     
-                    Log.d(TAG, "User data response code: " + response.code());
-                    Log.d(TAG, "User data response: " + responseString);
+                    Log.d(TAG, "=== USER DATA RESPONSE ===");
+                    Log.d(TAG, "Response code: " + response.code());
+                    Log.d(TAG, "Response headers: " + response.headers());
+                    Log.d(TAG, "Response body: " + responseString);
                     
                     if (response.isSuccessful() && responseBody != null) {
                         try {
                             JSONObject userData = new JSONObject(responseString);
-                            Log.d(TAG, "User data loaded successfully");
+                            Log.d(TAG, "=== USER DATA PARSED SUCCESSFULLY ===");
+                            Log.d(TAG, "Available keys: " + userData.keys());
+                            
+                            // Log dos campos individuais
+                            Log.d(TAG, "Email: " + userData.optString("email", "NOT_FOUND"));
+                            Log.d(TAG, "Username: " + userData.optString("username", "NOT_FOUND"));
+                            Log.d(TAG, "First name: " + userData.optString("first_name", "NOT_FOUND"));
+                            Log.d(TAG, "Last name: " + userData.optString("last_name", "NOT_FOUND"));
+                            Log.d(TAG, "Avatar: " + userData.optString("avatar", "NOT_FOUND"));
+                            
                             callback.onSuccess(userData);
                             
                         } catch (JSONException e) {
-                            Log.e(TAG, "Error parsing user data response", e);
-                            callback.onError("Erro ao processar dados do usuário");
+                            Log.e(TAG, "=== ERROR PARSING USER DATA JSON ===", e);
+                            Log.e(TAG, "Raw response: " + responseString);
+                            callback.onError("Erro ao processar dados do usuário: " + e.getMessage());
                         }
                     } else {
-                        Log.e(TAG, "User data failed with code: " + response.code() + " body: " + responseString);
+                        Log.e(TAG, "=== USER DATA REQUEST FAILED ===");
+                        Log.e(TAG, "Response code: " + response.code());
+                        Log.e(TAG, "Response body: " + responseString);
                         
                         if (response.code() == 401) {
+                            Log.e(TAG, "TOKEN IS INVALID OR EXPIRED!");
                             callback.onError("Token expirado ou inválido");
                         } else {
-                            callback.onError("Erro ao obter dados do usuário (" + response.code() + ")");
+                            callback.onError("Erro ao obter dados do usuário (" + response.code() + "): " + responseString);
                         }
                     }
                 }

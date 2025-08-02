@@ -53,7 +53,11 @@ public class ImageLoader {
     }
     
     public void load(Context context, String imageUrl, ImageView imageView) {
+        Log.d(TAG, "=== LOADING IMAGE ===");
+        Log.d(TAG, "Original URL: '" + imageUrl + "'");
+        
         if (imageUrl == null || imageUrl.isEmpty()) {
+            Log.w(TAG, "Image URL is empty, using placeholder");
             imageView.setImageResource(android.R.drawable.ic_menu_gallery);
             return;
         }
@@ -61,25 +65,33 @@ public class ImageLoader {
         // Verificar cache primeiro
         Bitmap cachedBitmap = memoryCache.get(imageUrl);
         if (cachedBitmap != null) {
+            Log.d(TAG, "Image found in cache: " + imageUrl);
             imageView.setImageBitmap(cachedBitmap);
             return;
         }
         
         // Definir placeholder enquanto carrega
+        Log.d(TAG, "Setting placeholder for: " + imageUrl);
         imageView.setImageResource(android.R.drawable.ic_menu_gallery);
         
         // Carregar imagem em background
+        Log.d(TAG, "Starting background download for: " + imageUrl);
         executorService.execute(() -> {
             try {
+                Log.d(TAG, "Downloading bitmap: " + imageUrl);
                 Bitmap bitmap = downloadBitmap(imageUrl);
                 if (bitmap != null) {
+                    Log.d(TAG, "Bitmap downloaded successfully: " + imageUrl);
                     // Adicionar ao cache
                     memoryCache.put(imageUrl, bitmap);
                     
                     // Atualizar UI na thread principal
                     mainHandler.post(() -> {
+                        Log.d(TAG, "Setting bitmap to ImageView: " + imageUrl);
                         imageView.setImageBitmap(bitmap);
                     });
+                } else {
+                    Log.e(TAG, "Failed to download bitmap: " + imageUrl);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error loading image: " + imageUrl, e);
@@ -93,32 +105,81 @@ public class ImageLoader {
         InputStream inputStream = null;
         
         try {
+            Log.d(TAG, "=== STARTING BITMAP DOWNLOAD ===");
+            Log.d(TAG, "Target URL: " + imageUrl);
+            
             URL url = new URL(imageUrl);
             connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(15000); // Aumentar timeout
+            connection.setReadTimeout(15000);
             connection.setRequestMethod("GET");
             connection.setDoInput(true);
+            connection.setInstanceFollowRedirects(true);
             
-            // Adicionar User-Agent para evitar bloqueios
+            // Headers importantes para GOG
             connection.setRequestProperty("User-Agent", 
-                "Mozilla/5.0 (Android; Mobile; rv:40.0) Gecko/40.0 Firefox/40.0");
+                "Mozilla/5.0 (Android 10; Mobile; rv:91.0) Gecko/91.0 Firefox/91.0");
+            connection.setRequestProperty("Accept", 
+                "image/webp,image/apng,image/*,*/*;q=0.8");
+            connection.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+            connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+            connection.setRequestProperty("DNT", "1");
+            connection.setRequestProperty("Connection", "keep-alive");
+            connection.setRequestProperty("Upgrade-Insecure-Requests", "1");
+            connection.setRequestProperty("Referer", "https://www.gog.com/");
             
+            Log.d(TAG, "Connecting to: " + url.getHost());
             connection.connect();
             
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            int responseCode = connection.getResponseCode();
+            Log.d(TAG, "HTTP Response Code: " + responseCode);
+            Log.d(TAG, "Response Message: " + connection.getResponseMessage());
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                Log.d(TAG, "Connection successful, reading image data...");
                 inputStream = connection.getInputStream();
                 
-                // Decodificar bitmap com sampling para economizar memória
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inSampleSize = calculateInSampleSize(options, 200, 200);
-                options.inJustDecodeBounds = false;
+                // Decodificar bitmap diretamente sem sampling primeiro
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                 
-                return BitmapFactory.decodeStream(inputStream, null, options);
+                if (bitmap != null) {
+                    Log.d(TAG, "Bitmap decoded successfully. Size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+                    // Se a imagem for muito grande, redimensionar
+                    if (bitmap.getWidth() > 300 || bitmap.getHeight() > 300) {
+                        Log.d(TAG, "Resizing large bitmap...");
+                        bitmap = Bitmap.createScaledBitmap(bitmap, 300, 300, true);
+                    }
+                    return bitmap;
+                } else {
+                    Log.e(TAG, "Failed to decode bitmap from stream");
+                }
+            } else if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP || 
+                      responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
+                      responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
+                String redirectUrl = connection.getHeaderField("Location");
+                Log.d(TAG, "Redirect detected to: " + redirectUrl);
+                if (redirectUrl != null) {
+                    return downloadBitmap(redirectUrl);
+                }
+            } else {
+                Log.e(TAG, "HTTP Error " + responseCode + ": " + connection.getResponseMessage());
+                // Ler error stream para mais detalhes
+                try {
+                    InputStream errorStream = connection.getErrorStream();
+                    if (errorStream != null) {
+                        byte[] errorBytes = new byte[1024];
+                        int bytesRead = errorStream.read(errorBytes);
+                        String errorMsg = new String(errorBytes, 0, bytesRead);
+                        Log.e(TAG, "Error response body: " + errorMsg);
+                        errorStream.close();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to read error stream", e);
+                }
             }
             
-        } catch (IOException e) {
-            Log.e(TAG, "Error downloading image: " + imageUrl, e);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception during image download: " + imageUrl, e);
         } finally {
             if (inputStream != null) {
                 try {
@@ -132,6 +193,7 @@ public class ImageLoader {
             }
         }
         
+        Log.e(TAG, "Download failed for: " + imageUrl);
         return null;
     }
     

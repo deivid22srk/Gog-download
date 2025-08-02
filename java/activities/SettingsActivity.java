@@ -21,6 +21,7 @@ import com.example.gogdownloader.R;
 import com.example.gogdownloader.database.DatabaseHelper;
 import com.example.gogdownloader.utils.ImageLoader;
 import com.example.gogdownloader.utils.PreferencesManager;
+import com.example.gogdownloader.utils.SAFDownloadManager;
 
 import java.io.File;
 
@@ -45,11 +46,21 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         
+        android.util.Log.d("SettingsActivity", "=== SETTINGS ACTIVITY CREATED ===");
+        
         initializeViews();
         initializeManagers();
         setupToolbar();
         setupActivityLaunchers();
         setupClickListeners();
+        loadCurrentSettings();
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        android.util.Log.d("SettingsActivity", "=== SETTINGS ACTIVITY RESUMED - RELOADING DATA ===");
+        // Recarregar dados quando a activity voltar ao foco
         loadCurrentSettings();
     }
     
@@ -102,26 +113,49 @@ public class SettingsActivity extends AppCompatActivity {
     }
     
     private void loadCurrentSettings() {
-        // Carregar pasta de download atual
-        String currentPath = preferencesManager.getDownloadPath();
-        currentPathText.setText(getString(R.string.folder_selected) + " " + currentPath);
-        selectedPath = currentPath;
+        android.util.Log.d("SettingsActivity", "=== LOADING CURRENT SETTINGS ===");
         
-        // Carregar email do usuário
+        // Carregar pasta de download atual com SAF
+        SAFDownloadManager safManager = new SAFDownloadManager(this);
+        String displayPath = safManager.getDisplayPath();
+        
+        android.util.Log.d("SettingsActivity", "Download path: '" + displayPath + "'");
+        currentPathText.setText(getString(R.string.folder_selected) + " " + displayPath);
+        
+        // Para o seletor de pasta, manter referência para qualquer path configurado
+        String legacyPath = preferencesManager.getDownloadPathLegacy();
+        String uriPath = preferencesManager.getDownloadUri();
+        selectedPath = (uriPath != null && !uriPath.isEmpty()) ? uriPath : legacyPath;
+        
+        // Carregar email do usuário com debug
         String userEmail = preferencesManager.getUserEmail();
+        String userName = preferencesManager.getUserName();
+        String userId = preferencesManager.getUserId();
+        
+        android.util.Log.d("SettingsActivity", "=== USER DATA FROM PREFERENCES ===");
+        android.util.Log.d("SettingsActivity", "User email: '" + userEmail + "'");
+        android.util.Log.d("SettingsActivity", "User name: '" + userName + "'");
+        android.util.Log.d("SettingsActivity", "User ID: '" + userId + "'");
+        
         if (userEmail != null && !userEmail.isEmpty()) {
+            android.util.Log.d("SettingsActivity", "Setting email to TextView: '" + userEmail + "'");
             userEmailText.setText(userEmail);
         } else {
+            android.util.Log.w("SettingsActivity", "No email found, showing 'Não logado'");
             userEmailText.setText("Não logado");
         }
         
         // Carregar versão do app
         try {
             String versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            android.util.Log.d("SettingsActivity", "App version: '" + versionName + "'");
             appVersionText.setText(versionName);
         } catch (Exception e) {
+            android.util.Log.e("SettingsActivity", "Failed to get app version", e);
             appVersionText.setText("Desconhecida");
         }
+        
+        android.util.Log.d("SettingsActivity", "=== SETTINGS LOADING COMPLETE ===");
     }
     
     private void openFolderPicker() {

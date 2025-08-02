@@ -9,11 +9,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.provider.DocumentsContract;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,8 +26,11 @@ import com.example.gogdownloader.api.GOGLibraryManager;
 import com.example.gogdownloader.database.DatabaseHelper;
 import com.example.gogdownloader.models.Game;
 import com.example.gogdownloader.services.DownloadService;
-import com.example.gogdownloader.utils.PermissionHelper;
+import com.example.gogdownloader.utils.SAFDownloadManager;
 import com.example.gogdownloader.utils.PreferencesManager;
+import com.example.gogdownloader.utils.PermissionHelper;
+import androidx.appcompat.widget.SearchView;
+import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONObject;
@@ -52,12 +56,18 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     private PreferencesManager preferencesManager;
     private DatabaseHelper databaseHelper;
     private PermissionHelper permissionHelper;
+    private SAFDownloadManager safDownloadManager;
+    
+    // Launcher para seleção de pasta de download
+    private ActivityResultLauncher<Intent> folderPickerLauncher;
+    private Game pendingDownloadGame; // Jogo aguardando seleção de pasta
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_library);
         
+        setupFolderPickerLauncher();
         initializeViews();
         initializeManagers();
         setupToolbar();
@@ -65,6 +75,49 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         setupClickListeners();
         checkPermissions();
         loadLibrary();
+    }
+    
+    private void setupFolderPickerLauncher() {
+        folderPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        android.net.Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            handleSelectedFolder(uri);
+                        }
+                    } else {
+                        // Usuário cancelou seleção
+                        pendingDownloadGame = null;
+                        Toast.makeText(this, "Seleção de pasta cancelada", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+    
+    private void handleSelectedFolder(android.net.Uri uri) {
+        try {
+            // Dar permissão persistente para a URI
+            getContentResolver().takePersistableUriPermission(uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            
+            // Salvar URI nas preferências
+            preferencesManager.setDownloadUri(uri.toString());
+            
+            Log.d("LibraryActivity", "Pasta selecionada e salva: " + uri.toString());
+            Toast.makeText(this, "Pasta de download configurada!", Toast.LENGTH_SHORT).show();
+            
+            // Se havia um download pendente, iniciar agora
+            if (pendingDownloadGame != null) {
+                Game gameToDownload = pendingDownloadGame;
+                pendingDownloadGame = null;
+                startGameDownload(gameToDownload);
+            }
+            
+        } catch (Exception e) {
+            Log.e("LibraryActivity", "Erro ao processar pasta selecionada", e);
+            Toast.makeText(this, "Erro ao configurar pasta de download", Toast.LENGTH_SHORT).show();
+            pendingDownloadGame = null;
+        }
     }
     
     private void initializeViews() {
@@ -84,6 +137,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         databaseHelper = new DatabaseHelper(this);
         libraryManager = new GOGLibraryManager(this);
         permissionHelper = new PermissionHelper(this);
+        safDownloadManager = new SAFDownloadManager(this);
     }
     
     private void setupToolbar() {
@@ -121,12 +175,16 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     }
     
     private void checkPermissions() {
+        // Solicitar permissões de armazenamento apenas para compatibilidade com configurações legadas
+        // Com SAF não são obrigatórias
         permissionHelper.requestStoragePermissions(granted -> {
             if (!granted) {
-                showError(getString(R.string.permission_storage));
+                Log.i("LibraryActivity", "Permissões de armazenamento negadas - usará apenas SAF");
+                // Não mostrar erro, pois SAF funciona sem essas permissões
             }
         });
         
+        // Permissões de notificação são importantes para o progresso de download
         permissionHelper.requestNotificationPermissions(granted -> {
             if (!granted) {
                 showError(getString(R.string.permission_notification));
@@ -249,13 +307,19 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     
     private void reloadUserInfo() {
         String authToken = preferencesManager.getAuthToken();
+        Log.d("LibraryActivity", "=== RELOADING USER INFO ===");
+        Log.d("LibraryActivity", "Auth token available: " + (authToken != null && !authToken.isEmpty()));
+        
         if (authToken != null && !authToken.isEmpty()) {
             GOGAuthManager authManager = new GOGAuthManager(this);
+            
+            Log.d("LibraryActivity", "Calling getUserData...");
             
             // Usar o novo método getUserData para obter informações completas do usuário
             authManager.getUserData(authToken, new GOGAuthManager.UserInfoCallback() {
                 @Override
                 public void onSuccess(JSONObject userData) {
+                    Log.d("LibraryActivity", "=== USER DATA SUCCESS ===");
                     runOnUiThread(() -> {
                         try {
                             // Extrair informações do userData.json
@@ -266,33 +330,54 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
                             String firstName = userData.optString("first_name", "");
                             String lastName = userData.optString("last_name", "");
                             
+                            Log.d("LibraryActivity", "=== EXTRACTED DATA ===");
+                            Log.d("LibraryActivity", "Email: '" + email + "'");
+                            Log.d("LibraryActivity", "Username: '" + username + "'");
+                            Log.d("LibraryActivity", "First name: '" + firstName + "'");
+                            Log.d("LibraryActivity", "Last name: '" + lastName + "'");
+                            Log.d("LibraryActivity", "Avatar: '" + avatar + "'");
+                            
                             // Criar nome de exibição
                             String displayName = "";
                             if (!firstName.isEmpty() || !lastName.isEmpty()) {
                                 displayName = (firstName + " " + lastName).trim();
+                                Log.d("LibraryActivity", "Using full name: '" + displayName + "'");
                             }
                             if (displayName.isEmpty() && !username.isEmpty()) {
                                 displayName = username;
+                                Log.d("LibraryActivity", "Using username: '" + displayName + "'");
                             }
                             if (displayName.isEmpty() && !email.isEmpty()) {
                                 displayName = email.split("@")[0]; // Usar parte antes do @ do email
+                                Log.d("LibraryActivity", "Using email prefix: '" + displayName + "'");
                             }
                             if (displayName.isEmpty()) {
                                 displayName = "Usuário GOG";
+                                Log.d("LibraryActivity", "Using fallback: '" + displayName + "'");
                             }
                             
+                            Log.d("LibraryActivity", "=== FINAL DISPLAY NAME: '" + displayName + "' ===");
+                            
                             // Salvar informações atualizadas
+                            Log.d("LibraryActivity", "Saving auth data...");
                             preferencesManager.saveAuthData(authToken, preferencesManager.getRefreshToken(), 
                                                            email, displayName, userId, avatar);
                             
                             // Atualizar UI
-                            userNameText.setText(displayName);
+                            Log.d("LibraryActivity", "Updating UI with display name: '" + displayName + "'");
+                            Log.d("LibraryActivity", "userNameText is null: " + (userNameText == null));
+                            if (userNameText != null) {
+                                userNameText.setText(displayName);
+                                Log.d("LibraryActivity", "Successfully set userNameText to: '" + displayName + "'");
+                                Log.d("LibraryActivity", "userNameText current value: '" + userNameText.getText().toString() + "'");
+                            } else {
+                                Log.e("LibraryActivity", "userNameText is null! Cannot update username display");
+                            }
                             
-                            Log.d("LibraryActivity", "User data reloaded successfully: " + displayName);
-                            Log.d("LibraryActivity", "Email: " + email + ", Username: " + username + ", Avatar: " + avatar);
+                            Log.d("LibraryActivity", "=== USER INFO UPDATE COMPLETE ===");
                             
                         } catch (Exception e) {
-                            Log.e("LibraryActivity", "Error processing user data", e);
+                            Log.e("LibraryActivity", "=== ERROR PROCESSING USER DATA ===", e);
                             userNameText.setText("Usuário GOG");
                         }
                     });
@@ -300,13 +385,14 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
                 
                 @Override
                 public void onError(String error) {
+                    Log.e("LibraryActivity", "=== USER DATA ERROR: " + error + " ===");
                     runOnUiThread(() -> {
-                        Log.e("LibraryActivity", "Failed to reload user data: " + error);
                         userNameText.setText("Usuário GOG");
                     });
                 }
             });
         } else {
+            Log.w("LibraryActivity", "No auth token available!");
             userNameText.setText("Usuário GOG");
         }
     }
@@ -402,11 +488,63 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     // Implementações dos callbacks do adapter
     @Override
     public void onDownloadGame(Game game) {
-        // Verificar permissões antes de iniciar download
-        if (!permissionHelper.hasStoragePermissions()) {
-            showError(getString(R.string.permission_storage));
+        Log.d("LibraryActivity", "Download solicitado para: " + game.getTitle());
+        
+        // Com SAF não precisamos de permissões de armazenamento tradicionais
+        // O sistema fornece acesso através de URIs selecionadas pelo usuário
+        
+        // Verificar se há pasta de download configurada
+        if (!safDownloadManager.hasDownloadLocationConfigured()) {
+            Log.d("LibraryActivity", "Nenhuma pasta configurada, solicitando seleção");
+            
+            // Salvar jogo pendente e solicitar seleção de pasta
+            pendingDownloadGame = game;
+            showFolderSelectionDialog();
             return;
         }
+        
+        // Pasta já configurada, iniciar download
+        startGameDownload(game);
+    }
+    
+    private void showFolderSelectionDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Pasta de Download")
+                .setMessage("Você precisa selecionar uma pasta onde os jogos serão salvos. Deseja escolher uma pasta agora?")
+                .setPositiveButton("Escolher Pasta", (dialog, which) -> {
+                    openFolderPicker();
+                })
+                .setNegativeButton("Cancelar", (dialog, which) -> {
+                    pendingDownloadGame = null;
+                })
+                .setCancelable(false)
+                .show();
+    }
+    
+    private void openFolderPicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | 
+                       Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                       Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        
+        // Definir diretório inicial se possível
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            java.io.File downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS);
+            android.net.Uri initialUri = android.net.Uri.fromFile(downloadsDir);
+            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialUri);
+        }
+        
+        try {
+            folderPickerLauncher.launch(intent);
+        } catch (Exception e) {
+            Log.e("LibraryActivity", "Erro ao abrir seletor de pasta", e);
+            Toast.makeText(this, "Erro ao abrir seletor de pasta", Toast.LENGTH_SHORT).show();
+            pendingDownloadGame = null;
+        }
+    }
+    
+    private void startGameDownload(Game game) {
+        Log.d("LibraryActivity", "Iniciando download para: " + game.getTitle());
         
         // Iniciar serviço de download
         Intent downloadIntent = DownloadService.createDownloadIntent(this, game);

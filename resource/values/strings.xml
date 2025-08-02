@@ -46,6 +46,6 @@
     <string name="cancel">Cancelar</string>
     <string name="retry">Tentar novamente</string>
     <string name="network_error">Erro de conexão. Verifique sua internet.</string>
-    <string name="permission_storage">Permissão de armazenamento necessária para downloads</string>
+    <string name="permission_storage">Permissão de armazenamento (opcional - usará SAF se negada)</string>
     <string name="permission_notification">Permissão de notificação necessária para progresso de download</string>
 </resources>
