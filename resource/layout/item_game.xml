@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    style="@style/GOGCard"
     android:layout_margin="4dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="8dp"
     android:foreground="?android:attr/selectableItemBackground">
 
     <LinearLayout
@@ -20,7 +21,7 @@
             android:layout_height="80dp"
             android:layout_marginEnd="12dp"
             android:scaleType="centerCrop"
-            android:background="@color/gog_dark_purple"
+            android:background="?attr/colorPrimaryContainer"
             android:contentDescription="Game Cover" />
 
         <!-- Game Info -->
@@ -32,13 +33,12 @@
             android:layout_gravity="center_vertical">
 
             <!-- Game Title -->
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/gameTitleText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Game Title"
-                android:textColor="@color/gog_text_primary"
-                android:textSize="16sp"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
                 android:textStyle="bold"
                 android:maxLines="2"
                 android:ellipsize="end" />
@@ -50,36 +50,36 @@
                 android:layout_marginTop="4dp"
                 android:orientation="horizontal">
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/gameDeveloperText"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Developer"
-                    android:textColor="@color/gog_text_secondary"
-                    android:textSize="12sp"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/gameSizeText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0 MB"
-                    android:textColor="@color/gog_text_secondary"
-                    android:textSize="12sp" />
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
             </LinearLayout>
 
             <!-- Genres -->
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/gameGenresText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Action, Adventure"
-                android:textColor="@color/gog_text_secondary"
-                android:textSize="11sp"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
@@ -97,19 +97,19 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="4dp"
-                    android:progressTint="@color/download_progress"
-                    android:progressBackgroundTint="@color/gog_dark_purple"
+                    android:progressTint="?attr/colorPrimary"
+                    android:progressBackgroundTint="?attr/colorPrimaryContainer"
                     android:max="100"
                     android:progress="0" />
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/downloadProgressText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="Baixando... 50%"
-                    android:textColor="@color/download_progress"
-                    android:textSize="10sp" />
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="?attr/colorPrimary" />
 
             </LinearLayout>
 
@@ -123,16 +123,13 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="8dp">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/actionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/download"
-                android:textSize="12sp"
-                android:padding="8dp"
-                android:minWidth="80dp"
-                android:background="@color/gog_purple"
-                android:textColor="@color/white" />
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:minWidth="80dp" />
 
             <!-- Status Icon -->
             <ImageView
@@ -148,4 +145,4 @@
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>
