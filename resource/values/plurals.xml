@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="game_count">
+        <item quantity="zero">Nenhum jogo na biblioteca</item>
+        <item quantity="one">1 jogo na biblioteca</item>
+        <item quantity="other">%d jogos na biblioteca</item>
+    </plurals>
+</resources>

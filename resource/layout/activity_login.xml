@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/gog_background"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center">
+
+    <!-- Logo/Title -->
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginBottom="32dp"
+        android:src="@mipmap/ic_launcher"
+        android:contentDescription="GOG Logo" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/login_title"
+        style="@style/GOGTitle"
+        android:layout_marginBottom="32dp"
+        android:textAlignment="center" />
+
+    <!-- OAuth Login Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/GOGCard"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center">
+
+            <!-- Descrição do Login OAuth -->
+            <TextView
+                android:id="@+id/descriptionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Para acessar sua biblioteca de jogos, você será redirecionado para o site oficial do GOG.com para fazer login com segurança."
+                android:textColor="@color/gog_text_secondary"
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:layout_marginBottom="24dp"
+                android:lineSpacingMultiplier="1.2" />
+
+            <!-- Ícone de Segurança -->
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_security"
+                android:tint="@color/gog_purple"
+                android:layout_marginBottom="16dp"
+                android:contentDescription="Seguro" />
+
+            <!-- Login Button -->
+            <Button
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Entrar com GOG.com"
+                style="@style/GOGButton"
+                android:textStyle="bold"
+                android:paddingVertical="16dp" />
+
+            <!-- Texto de Segurança -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔒 Login seguro via OAuth2"
+                android:textColor="@color/gog_text_secondary"
+                android:textSize="14sp"
+                android:textAlignment="center"
+                android:layout_marginTop="12dp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:indeterminateTint="@color/gog_purple" />
+
+    <!-- Status Text -->
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/gog_text_secondary"
+        android:visibility="gone" />
+
+</LinearLayout>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GOG Downloader</string>
+    
+    <!-- Login Activity -->
+    <string name="login_title">Entrar no GOG.com</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Senha</string>
+    <string name="login_button">Entrar</string>
+    <string name="login_error">Erro de login. Verifique suas credenciais.</string>
+    <string name="login_success">Login realizado com sucesso!</string>
+    <string name="logging_in">Fazendo login...</string>
+    
+    <!-- Library Activity -->
+    <string name="library_title">Minha Biblioteca</string>
+    <string name="loading_library">Carregando biblioteca...</string>
+    <string name="no_games">Nenhum jogo encontrado na biblioteca</string>
+    <string name="refresh">Atualizar</string>
+    <string name="settings">Configurações</string>
+    <string name="logout">Sair</string>
+    <string name="download">Download</string>
+    <string name="downloading">Baixando...</string>
+    <string name="downloaded">Baixado</string>
+    
+    <!-- Settings Activity -->
+    <string name="settings_title">Configurações</string>
+    <string name="download_folder">Pasta de Download</string>
+    <string name="choose_folder">Escolher Pasta</string>
+    <string name="default_folder">Pasta padrão: Downloads/GOG</string>
+    <string name="folder_selected">Pasta selecionada:</string>
+    <string name="save_settings">Salvar</string>
+    <string name="settings_saved">Configurações salvas!</string>
+    
+    <!-- Download Service -->
+    <string name="download_channel_name">Downloads GOG</string>
+    <string name="download_channel_description">Notificações de download de jogos do GOG</string>
+    <string name="downloading_game">Baixando %1$s</string>
+    <string name="download_progress">%1$d%% - %2$s</string>
+    <string name="download_complete">Download completo: %1$s</string>
+    <string name="download_failed">Falha no download: %1$s</string>
+    <string name="download_cancelled">Download cancelado: %1$s</string>
+    
+    <!-- General -->
+    <string name="error">Erro</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancelar</string>
+    <string name="retry">Tentar novamente</string>
+    <string name="network_error">Erro de conexão. Verifique sua internet.</string>
+    <string name="permission_storage">Permissão de armazenamento necessária para downloads</string>
+    <string name="permission_notification">Permissão de notificação necessária para progresso de download</string>
+</resources>
