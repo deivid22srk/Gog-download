@@ -20,7 +20,6 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class GOGLibraryManager {
@@ -29,7 +28,7 @@ public class GOGLibraryManager {
     
     // URLs da API do GOG - endpoints corretos conforme documentação
     private static final String USER_GAMES_URL = "https://embed.gog.com/user/data/games";
-    private static final String LIBRARY_FILTERED_URL = "https://embed.gog.com/account/getFilteredProducts";
+    private static final String LIBRARY_FILTERED_URL = "https://embed.gog.com/account/getFilteredProducts?mediaType=game&page=%d";
     private static final String GAME_DETAILS_URL = "https://api.gog.com/products/%d?expand=downloads";
     private static final String DOWNLOAD_LINK_URL = "https://api.gog.com/products/%d/downlink/download/%s";
     private static final String DOWNLINK_INFO_URL = "https://api.gog.com/products/%d/downlink/%s";
@@ -108,12 +107,8 @@ public class GOGLibraryManager {
                             JSONArray ownedGames = json.optJSONArray("owned");
                             
                             if (ownedGames != null && ownedGames.length() > 0) {
-                                List<Long> gameIds = new ArrayList<>();
-                                for (int i = 0; i < ownedGames.length(); i++) {
-                                    gameIds.add(ownedGames.getLong(i));
-                                }
-                                Log.d(TAG, "Found " + gameIds.size() + " owned games, getting detailed info");
-                                loadDetailedLibrary(authToken, gameIds, callback);
+                                Log.d(TAG, "Found " + ownedGames.length() + " owned games, getting detailed info");
+                                loadDetailedLibrary(authToken, 1, new ArrayList<>(), callback);
                             } else {
                                 Log.d(TAG, "No owned games found");
                                 callback.onSuccess(new ArrayList<>());
@@ -142,55 +137,54 @@ public class GOGLibraryManager {
      * @param authToken Token de autenticação
      * @param callback Callback para resultado
      */
-    private void loadDetailedLibrary(String authToken, List<Long> gameIds, LibraryCallback callback) {
-        Log.d(TAG, "Loading detailed library from GOG API - Step 2: Getting filtered products");
-        
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("mediaType", "game");
-            jsonBody.put("ids", new JSONArray(gameIds));
-        } catch (JSONException e) {
-            callback.onError("Failed to create request body");
-            return;
-        }
-        RequestBody body = RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
+    private void loadDetailedLibrary(String authToken, int page, List<Game> accumulatedGames, LibraryCallback callback) {
+        Log.d(TAG, "Loading detailed library from GOG API - Page " + page);
 
+        String url = String.format(LIBRARY_FILTERED_URL, page);
         Request request = new Request.Builder()
-                .url(LIBRARY_FILTERED_URL)
-                .post(body)
+                .url(url)
+                .get()
                 .addHeader("Authorization", "Bearer " + authToken)
                 .addHeader("User-Agent", "GOGDownloaderApp/1.0")
                 .addHeader("Accept", "application/json")
                 .build();
-        
+
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "Detailed library loading network error", e);
                 callback.onError("Erro de conexão: " + e.getMessage());
             }
-            
+
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 try (Response autoCloseResponse = response) {
                     String responseBody = autoCloseResponse.body() != null ? autoCloseResponse.body().string() : "";
-                    
+
                     Log.d(TAG, "Detailed library response code: " + response.code());
                     Log.d(TAG, "Detailed library response: " + responseBody);
-                    
+
                     if (response.isSuccessful()) {
                         try {
+                            JSONObject json = new JSONObject(responseBody);
                             List<Game> games = parseLibraryResponse(responseBody);
-                            Log.d(TAG, "Library loaded successfully: " + games.size() + " games");
-                            callback.onSuccess(games);
-                            
+                            accumulatedGames.addAll(games);
+
+                            int totalPages = json.optInt("totalPages", 1);
+                            if (page < totalPages) {
+                                loadDetailedLibrary(authToken, page + 1, accumulatedGames, callback);
+                            } else {
+                                Log.d(TAG, "Library loaded successfully: " + accumulatedGames.size() + " games");
+                                callback.onSuccess(accumulatedGames);
+                            }
+
                         } catch (JSONException e) {
                             Log.e(TAG, "Error parsing detailed library response", e);
                             callback.onError("Erro ao processar biblioteca de jogos");
                         }
                     } else {
                         Log.e(TAG, "Detailed library loading failed with code: " + response.code());
-                        
+
                         if (response.code() == 401) {
                             callback.onError("Token expirado. Faça login novamente.");
                         } else {
