@@ -29,11 +29,18 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class DownloadService extends Service {
     
@@ -60,6 +67,7 @@ public class DownloadService extends Service {
     private DatabaseHelper databaseHelper;
     private PreferencesManager preferencesManager;
     private SAFDownloadManager safDownloadManager;
+    private OkHttpClient httpClient;
     
     public static Intent createDownloadIntent(Context context, Game game) {
         Intent intent = new Intent(context, DownloadService.class);
@@ -87,6 +95,13 @@ public class DownloadService extends Service {
         databaseHelper = new DatabaseHelper(this);
         preferencesManager = new PreferencesManager(this);
         safDownloadManager = new SAFDownloadManager(this);
+        
+        // Configurar cliente HTTP com timeouts maiores para download
+        httpClient = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(300, TimeUnit.SECONDS)  // 5 minutos para leitura
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .build();
         
         createNotificationChannel();
         
@@ -134,6 +149,11 @@ public class DownloadService extends Service {
         
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdown();
+        }
+        
+        if (httpClient != null) {
+            httpClient.dispatcher().executorService().shutdown();
+            httpClient.connectionPool().evictAll();
         }
         
         if (databaseHelper != null) {
@@ -444,8 +464,8 @@ public class DownloadService extends Service {
             
             Log.d(TAG, "Created download file: " + downloadFile.getName());
             
-            // Simular download usando SAF
-            simulateDownloadSAF(downloadFile);
+            // Download real usando SAF
+            realDownloadSAF(downloadFile);
         }
         
         private void downloadFileLegacy() throws IOException {
@@ -461,125 +481,168 @@ public class DownloadService extends Service {
             String fileName = downloadLink.getFileName();
             File outputFile = new File(gameDir, fileName);
             
-            // Para demonstração, simular download criando arquivo de teste
-            simulateDownload(outputFile);
+            // Download real usando arquivo local
+            realDownloadLegacy(outputFile);
         }
         
-        private void simulateDownloadSAF(DocumentFile outputFile) throws IOException {
-            long totalBytes = downloadLink.getSize();
-            if (totalBytes <= 0) {
-                totalBytes = 100L * 1024 * 1024; // 100MB padrão
-            }
+        private void realDownloadSAF(DocumentFile outputFile) throws IOException {
+            String downloadUrl = downloadLink.getDownloadUrl();
+            Log.d(TAG, "Starting real SAF download from: " + downloadUrl);
             
-            Log.d(TAG, "Starting SAF download simulation. Total bytes: " + totalBytes);
+            Request request = new Request.Builder()
+                    .url(downloadUrl)
+                    .get()
+                    .addHeader("User-Agent", "Mozilla/5.0 (Android 10; Mobile; rv:91.0) Gecko/91.0 Firefox/91.0")
+                    .addHeader("Accept", "*/*")
+                    .addHeader("Accept-Language", "en-US,en;q=0.5")
+                    .addHeader("Accept-Encoding", "gzip, deflate")
+                    .addHeader("DNT", "1")
+                    .addHeader("Connection", "keep-alive")
+                    .addHeader("Referer", "https://www.gog.com/")
+                    .build();
             
-            // Simular download com progresso realista usando SAF
-            try (OutputStream outputStream = safDownloadManager.getOutputStream(outputFile)) {
-                long bytesDownloaded = 0;
-                byte[] buffer = new byte[8192];
+            try (Response response = httpClient.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new IOException("HTTP Error: " + response.code() + " - " + response.message());
+                }
                 
-                // Velocidade simulada: ~10MB/s
-                long delayPerChunk = 1; // 1ms por chunk de 8KB = ~8MB/s
+                long totalBytes = response.body().contentLength();
+                if (totalBytes <= 0) {
+                    totalBytes = downloadLink.getSize();
+                }
                 
-                while (bytesDownloaded < totalBytes && !cancelled) {
-                    // Escrever chunk
-                    long remainingBytes = totalBytes - bytesDownloaded;
-                    int chunkSize = (int) Math.min(buffer.length, remainingBytes);
+                Log.d(TAG, "Content-Length: " + totalBytes + " bytes");
+                
+                try (InputStream inputStream = response.body().byteStream();
+                     OutputStream outputStream = safDownloadManager.getOutputStream(outputFile)) {
                     
-                    // Criar dados de teste
-                    for (int i = 0; i < chunkSize; i++) {
-                        buffer[i] = (byte) (i % 256);
+                    long bytesDownloaded = 0;
+                    byte[] buffer = new byte[16384]; // 16KB buffer
+                    int bytesRead;
+                    
+                    long lastProgressUpdate = System.currentTimeMillis();
+                    
+                    while ((bytesRead = inputStream.read(buffer)) != -1 && !cancelled) {
+                        outputStream.write(buffer, 0, bytesRead);
+                        bytesDownloaded += bytesRead;
+                        
+                        // Atualizar progresso a cada 500ms para não sobrecarregar
+                        long currentTime = System.currentTimeMillis();
+                        if (currentTime - lastProgressUpdate > 500) {
+                            onDownloadProgress(game, bytesDownloaded, totalBytes);
+                            lastProgressUpdate = currentTime;
+                        }
+                        
+                        // Verificar se foi cancelado
+                        if (cancelled) {
+                            outputFile.delete();
+                            return;
+                        }
                     }
                     
-                    outputStream.write(buffer, 0, chunkSize);
-                    bytesDownloaded += chunkSize;
+                    // Flush final
+                    outputStream.flush();
                     
-                    // Atualizar progresso
-                    onDownloadProgress(game, bytesDownloaded, totalBytes);
-                    
-                    // Simular delay de rede
-                    try {
-                        Thread.sleep(delayPerChunk);
-                    } catch (InterruptedException e) {
-                        if (cancelled) return;
-                        throw new IOException("Download interrompido");
+                    if (cancelled) {
+                        outputFile.delete();
+                        return;
                     }
+                    
+                    // Progresso final
+                    onDownloadProgress(game, bytesDownloaded, bytesDownloaded);
+                    
+                    // Download completo
+                    String filePath = outputFile.getUri().toString();
+                    Log.d(TAG, "SAF download completed: " + filePath + " (" + bytesDownloaded + " bytes)");
+                    onDownloadComplete(game, filePath);
+                    
+                } catch (IOException e) {
+                    // Deletar arquivo em caso de erro
+                    if (outputFile.exists()) {
+                        outputFile.delete();
+                    }
+                    throw e;
                 }
-                
-                if (cancelled) {
-                    // Deletar arquivo parcial
-                    outputFile.delete();
-                    return;
-                }
-                
-                // Download completo
-                String filePath = outputFile.getUri().toString();
-                Log.d(TAG, "SAF download completed: " + filePath);
-                onDownloadComplete(game, filePath);
-                
-            } catch (IOException e) {
-                // Deletar arquivo em caso de erro
-                if (outputFile.exists()) {
-                    outputFile.delete();
-                }
-                throw e;
             }
         }
         
-        private void simulateDownload(File outputFile) throws IOException {
-            long totalBytes = downloadLink.getSize();
-            if (totalBytes <= 0) {
-                totalBytes = 100L * 1024 * 1024; // 100MB padrão
-            }
+        private void realDownloadLegacy(File outputFile) throws IOException {
+            String downloadUrl = downloadLink.getDownloadUrl();
+            Log.d(TAG, "Starting real legacy download from: " + downloadUrl);
             
-            // Simular download com progresso realista
-            try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
-                long bytesDownloaded = 0;
-                byte[] buffer = new byte[8192];
+            Request request = new Request.Builder()
+                    .url(downloadUrl)
+                    .get()
+                    .addHeader("User-Agent", "Mozilla/5.0 (Android 10; Mobile; rv:91.0) Gecko/91.0 Firefox/91.0")
+                    .addHeader("Accept", "*/*")
+                    .addHeader("Accept-Language", "en-US,en;q=0.5")
+                    .addHeader("Accept-Encoding", "gzip, deflate")
+                    .addHeader("DNT", "1")
+                    .addHeader("Connection", "keep-alive")
+                    .addHeader("Referer", "https://www.gog.com/")
+                    .build();
+            
+            try (Response response = httpClient.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new IOException("HTTP Error: " + response.code() + " - " + response.message());
+                }
                 
-                // Velocidade simulada: ~10MB/s
-                long delayPerChunk = 1; // 1ms por chunk de 8KB = ~8MB/s
+                long totalBytes = response.body().contentLength();
+                if (totalBytes <= 0) {
+                    totalBytes = downloadLink.getSize();
+                }
                 
-                while (bytesDownloaded < totalBytes && !cancelled) {
-                    // Escrever chunk
-                    long remainingBytes = totalBytes - bytesDownloaded;
-                    int chunkSize = (int) Math.min(buffer.length, remainingBytes);
+                Log.d(TAG, "Content-Length: " + totalBytes + " bytes");
+                
+                try (InputStream inputStream = response.body().byteStream();
+                     FileOutputStream outputStream = new FileOutputStream(outputFile)) {
                     
-                    // Criar dados de teste
-                    for (int i = 0; i < chunkSize; i++) {
-                        buffer[i] = (byte) (i % 256);
+                    long bytesDownloaded = 0;
+                    byte[] buffer = new byte[16384]; // 16KB buffer
+                    int bytesRead;
+                    
+                    long lastProgressUpdate = System.currentTimeMillis();
+                    
+                    while ((bytesRead = inputStream.read(buffer)) != -1 && !cancelled) {
+                        outputStream.write(buffer, 0, bytesRead);
+                        bytesDownloaded += bytesRead;
+                        
+                        // Atualizar progresso a cada 500ms para não sobrecarregar
+                        long currentTime = System.currentTimeMillis();
+                        if (currentTime - lastProgressUpdate > 500) {
+                            onDownloadProgress(game, bytesDownloaded, totalBytes);
+                            lastProgressUpdate = currentTime;
+                        }
+                        
+                        // Verificar se foi cancelado
+                        if (cancelled) {
+                            outputFile.delete();
+                            return;
+                        }
                     }
                     
-                    outputStream.write(buffer, 0, chunkSize);
-                    bytesDownloaded += chunkSize;
+                    // Flush final
+                    outputStream.flush();
                     
-                    // Atualizar progresso
-                    onDownloadProgress(game, bytesDownloaded, totalBytes);
-                    
-                    // Simular delay de rede
-                    try {
-                        Thread.sleep(delayPerChunk);
-                    } catch (InterruptedException e) {
-                        if (cancelled) return;
-                        throw new IOException("Download interrompido");
+                    if (cancelled) {
+                        outputFile.delete();
+                        return;
                     }
+                    
+                    // Progresso final
+                    onDownloadProgress(game, bytesDownloaded, bytesDownloaded);
+                    
+                    // Download completo
+                    Log.d(TAG, "Legacy download completed: " + outputFile.getAbsolutePath() + " (" + bytesDownloaded + " bytes)");
+                    onDownloadComplete(game, outputFile.getAbsolutePath());
+                    
+                } catch (IOException e) {
+                    // Deletar arquivo em caso de erro
+                    if (outputFile.exists()) {
+                        outputFile.delete();
+                    }
+                    throw e;
                 }
-                
-                if (cancelled) {
-                    // Deletar arquivo parcial
-                    outputFile.delete();
-                    return;
-                }
-                
-                // Download completo
-                onDownloadComplete(game, outputFile.getAbsolutePath());
-                
-            } catch (IOException e) {
-                // Deletar arquivo em caso de erro
-                if (outputFile.exists()) {
-                    outputFile.delete();
-                }
-                throw e;
             }
         }
     }

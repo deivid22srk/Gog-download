@@ -26,12 +26,16 @@ public class GOGLibraryManager {
     
     private static final String TAG = "GOGLibraryManager";
     
-    // URLs da API do GOG - usando embed.gog.com para biblioteca, api.gog.com para downloads
-    private static final String USER_GAMES_URL = "https://embed.gog.com/user/data/games";
-    private static final String LIBRARY_FILTERED_URL = "https://embed.gog.com/account/getFilteredProducts?mediaType=1&page=%d";
+    // URLs da API do GOG - usando endpoints que funcionam com Bearer token
+    private static final String USER_GAMES_URL = "https://api.gog.com/user/data/games";
+    private static final String LIBRARY_FILTERED_URL = "https://api.gog.com/user/data/games";
     private static final String GAME_DETAILS_URL = "https://api.gog.com/products/%d?expand=downloads";
     private static final String DOWNLOAD_LINK_URL = "https://api.gog.com/products/%d/downlink/download/%s";
     private static final String DOWNLINK_INFO_URL = "https://api.gog.com/products/%d/downlink/%s";
+    
+    // Fallback URLs para embed.gog.com se api.gog.com falhar
+    private static final String EMBED_USER_GAMES_URL = "https://embed.gog.com/user/data/games";
+    private static final String EMBED_LIBRARY_FILTERED_URL = "https://embed.gog.com/account/getFilteredProducts?mediaType=1&page=%d";
     
     private Context context;
     private PreferencesManager preferencesManager;
@@ -64,7 +68,7 @@ public class GOGLibraryManager {
     
     /**
      * Carrega a biblioteca do usuário a partir da API real do GOG
-     * Primeiro obtém lista de IDs dos jogos, depois obtém detalhes filtrados
+     * Tenta api.gog.com primeiro, fallback para embed.gog.com
      * @param callback Callback para o resultado
      */
     public void loadUserLibrary(LibraryCallback callback) {
@@ -74,10 +78,18 @@ public class GOGLibraryManager {
             return;
         }
         
-        Log.d(TAG, "Loading user library from GOG API - Step 1: Getting user games");
+        Log.d(TAG, "Loading user library from GOG API");
         
-        // Primeiro, obter lista de jogos do usuário
-        // Para embed.gog.com, usar Authorization Bearer header
+        // Tentar api.gog.com primeiro
+        tryApiGogLibrary(authToken, callback);
+    }
+    
+    /**
+     * Tenta carregar biblioteca do api.gog.com
+     */
+    private void tryApiGogLibrary(String authToken, LibraryCallback callback) {
+        Log.d(TAG, "Trying api.gog.com for user library");
+        
         Request request = new Request.Builder()
                 .url(USER_GAMES_URL)
                 .get()
@@ -89,7 +101,55 @@ public class GOGLibraryManager {
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.e(TAG, "User games loading network error", e);
+                Log.e(TAG, "api.gog.com failed, trying embed.gog.com", e);
+                tryEmbedGogLibrary(authToken, callback);
+            }
+            
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (Response autoCloseResponse = response) {
+                    String responseBody = autoCloseResponse.body() != null ? autoCloseResponse.body().string() : "";
+                    
+                    Log.d(TAG, "api.gog.com response code: " + response.code());
+                    Log.d(TAG, "api.gog.com response: " + responseBody);
+                    
+                    if (response.isSuccessful()) {
+                        try {
+                            List<Game> games = parseApiGogResponse(responseBody);
+                            Log.d(TAG, "Successfully loaded " + games.size() + " games from api.gog.com");
+                            callback.onSuccess(games);
+                            
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error parsing api.gog.com response, trying embed.gog.com", e);
+                            tryEmbedGogLibrary(authToken, callback);
+                        }
+                    } else {
+                        Log.e(TAG, "api.gog.com failed with code: " + response.code() + ", trying embed.gog.com");
+                        tryEmbedGogLibrary(authToken, callback);
+                    }
+                }
+            }
+        });
+    }
+    
+    /**
+     * Fallback para embed.gog.com
+     */
+    private void tryEmbedGogLibrary(String authToken, LibraryCallback callback) {
+        Log.d(TAG, "Trying embed.gog.com for user library");
+        
+        Request request = new Request.Builder()
+                .url(EMBED_USER_GAMES_URL)
+                .get()
+                .addHeader("Authorization", "Bearer " + authToken)
+                .addHeader("User-Agent", "GOGDownloaderApp/1.0")
+                .addHeader("Accept", "application/json")
+                .build();
+        
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "All library endpoints failed", e);
                 callback.onError("Erro de conexão: " + e.getMessage());
             }
             
@@ -98,12 +158,11 @@ public class GOGLibraryManager {
                 try (Response autoCloseResponse = response) {
                     String responseBody = autoCloseResponse.body() != null ? autoCloseResponse.body().string() : "";
                     
-                    Log.d(TAG, "User games response code: " + response.code());
-                    Log.d(TAG, "User games response: " + responseBody);
+                    Log.d(TAG, "embed.gog.com response code: " + response.code());
+                    Log.d(TAG, "embed.gog.com response: " + responseBody);
                     
                     if (response.isSuccessful()) {
                         try {
-                            // Verificar se temos jogos
                             JSONObject json = new JSONObject(responseBody);
                             JSONArray ownedGames = json.optJSONArray("owned");
                             
@@ -116,13 +175,13 @@ public class GOGLibraryManager {
                             }
                             
                         } catch (JSONException e) {
-                            Log.e(TAG, "Error parsing user games response", e);
+                            Log.e(TAG, "Error parsing embed.gog.com response", e);
                             callback.onError("Erro ao processar lista de jogos");
                         }
                     } else {
-                        Log.e(TAG, "User games loading failed with code: " + response.code());
+                        Log.e(TAG, "embed.gog.com failed with code: " + response.code());
                         
-                        if (response.code() == 401) {
+                        if (response.code() == 401 || response.code() == 403) {
                             callback.onError("Token expirado. Faça login novamente.");
                         } else {
                             callback.onError("Erro ao carregar jogos (" + response.code() + ")");
@@ -134,15 +193,54 @@ public class GOGLibraryManager {
     }
     
     /**
-     * Carrega detalhes da biblioteca usando o endpoint filtrado
+     * Parseia resposta do api.gog.com que tem formato diferente
+     */
+    private List<Game> parseApiGogResponse(String responseBody) throws JSONException {
+        List<Game> games = new ArrayList<>();
+        
+        Log.d(TAG, "Parsing api.gog.com response");
+        
+        JSONObject json = new JSONObject(responseBody);
+        
+        // api.gog.com pode retornar formato diferente
+        if (json.has("owned")) {
+            JSONArray ownedGames = json.getJSONArray("owned");
+            
+            for (int i = 0; i < ownedGames.length(); i++) {
+                try {
+                    Object gameObj = ownedGames.get(i);
+                    
+                    if (gameObj instanceof JSONObject) {
+                        // Se for objeto completo
+                        JSONObject gameJson = (JSONObject) gameObj;
+                        Game game = Game.fromJson(gameJson);
+                        games.add(game);
+                    } else {
+                        // Se for apenas ID
+                        long gameId = ownedGames.getLong(i);
+                        Game game = new Game(gameId, "Game ID: " + gameId);
+                        games.add(game);
+                    }
+                    
+                } catch (Exception e) {
+                    Log.w(TAG, "Error parsing game at index " + i, e);
+                }
+            }
+        }
+        
+        Log.d(TAG, "Parsed " + games.size() + " games from api.gog.com");
+        return games;
+    }
+    
+    /**
+     * Carrega detalhes da biblioteca usando o endpoint filtrado (apenas para embed.gog.com)
      * @param authToken Token de autenticação
      * @param callback Callback para resultado
      */
     private void loadDetailedLibrary(String authToken, int page, List<Game> accumulatedGames, LibraryCallback callback) {
-        Log.d(TAG, "Loading detailed library from GOG API - Page " + page);
+        Log.d(TAG, "Loading detailed library from embed.gog.com - Page " + page);
 
-        String url = String.format(LIBRARY_FILTERED_URL, page);
-        // Para embed.gog.com, usar Authorization Bearer header
+        String url = String.format(EMBED_LIBRARY_FILTERED_URL, page);
         Request request = new Request.Builder()
                 .url(url)
                 .get()
@@ -155,7 +253,14 @@ public class GOGLibraryManager {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "Detailed library loading network error", e);
-                callback.onError("Erro de conexão: " + e.getMessage());
+                
+                // Se houve erro mas já temos alguns jogos acumulados, retornar eles
+                if (!accumulatedGames.isEmpty()) {
+                    Log.w(TAG, "Returning " + accumulatedGames.size() + " games despite error");
+                    callback.onSuccess(accumulatedGames);
+                } else {
+                    callback.onError("Erro de conexão: " + e.getMessage());
+                }
             }
 
             @Override
@@ -164,7 +269,8 @@ public class GOGLibraryManager {
                     String responseBody = autoCloseResponse.body() != null ? autoCloseResponse.body().string() : "";
 
                     Log.d(TAG, "Detailed library response code: " + response.code());
-                    Log.d(TAG, "Detailed library response: " + responseBody);
+                    Log.d(TAG, "Detailed library response preview: " + 
+                           responseBody.substring(0, Math.min(300, responseBody.length())));
 
                     if (response.isSuccessful()) {
                         try {
@@ -173,7 +279,7 @@ public class GOGLibraryManager {
                             accumulatedGames.addAll(games);
 
                             int totalPages = json.optInt("totalPages", 1);
-                            if (page < totalPages) {
+                            if (page < totalPages && page < 10) { // Limite de 10 páginas para evitar loops infinitos
                                 loadDetailedLibrary(authToken, page + 1, accumulatedGames, callback);
                             } else {
                                 Log.d(TAG, "Library loaded successfully: " + accumulatedGames.size() + " games");
@@ -182,12 +288,23 @@ public class GOGLibraryManager {
 
                         } catch (JSONException e) {
                             Log.e(TAG, "Error parsing detailed library response", e);
-                            callback.onError("Erro ao processar biblioteca de jogos");
+                            
+                            // Se houve erro mas já temos alguns jogos acumulados, retornar eles
+                            if (!accumulatedGames.isEmpty()) {
+                                Log.w(TAG, "Returning " + accumulatedGames.size() + " games despite parsing error");
+                                callback.onSuccess(accumulatedGames);
+                            } else {
+                                callback.onError("Erro ao processar biblioteca de jogos");
+                            }
                         }
                     } else {
                         Log.e(TAG, "Detailed library loading failed with code: " + response.code());
 
-                        if (response.code() == 401) {
+                        // Se houve erro mas já temos alguns jogos acumulados, retornar eles
+                        if (!accumulatedGames.isEmpty()) {
+                            Log.w(TAG, "Returning " + accumulatedGames.size() + " games despite HTTP error");
+                            callback.onSuccess(accumulatedGames);
+                        } else if (response.code() == 401 || response.code() == 403) {
                             callback.onError("Token expirado. Faça login novamente.");
                         } else {
                             callback.onError("Erro ao carregar biblioteca (" + response.code() + ")");

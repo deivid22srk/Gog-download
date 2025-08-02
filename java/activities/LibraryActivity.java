@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.provider.DocumentsContract;
@@ -26,6 +27,7 @@ import com.example.gogdownloader.api.GOGLibraryManager;
 import com.example.gogdownloader.database.DatabaseHelper;
 import com.example.gogdownloader.models.Game;
 import com.example.gogdownloader.services.DownloadService;
+import com.example.gogdownloader.utils.ImageLoader;
 import com.example.gogdownloader.utils.SAFDownloadManager;
 import com.example.gogdownloader.utils.PreferencesManager;
 import com.example.gogdownloader.utils.PermissionHelper;
@@ -290,19 +292,58 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     private void updateUserInfo() {
         String displayName = preferencesManager.getDisplayName();
         
-        // Se o nome exibido for vazio ou padrão, tentar recarregar as informações do usuário
-        if (displayName == null || displayName.isEmpty() || displayName.equals("Usuário GOG")) {
-            Log.d("LibraryActivity", "Display name is empty or default, trying to reload user info");
+        Log.d("LibraryActivity", "=== UPDATE USER INFO ===");
+        Log.d("LibraryActivity", "Current display name: '" + displayName + "'");
+        Log.d("LibraryActivity", "User email: '" + preferencesManager.getUserEmail() + "'");
+        Log.d("LibraryActivity", "User name: '" + preferencesManager.getUserName() + "'");
+        Log.d("LibraryActivity", "User ID: '" + preferencesManager.getUserId() + "'");
+        
+        // Sempre tentar carregar dados do usuário se não temos informações
+        boolean shouldReloadUserInfo = displayName == null || 
+                                      displayName.isEmpty() || 
+                                      displayName.equals("Usuário GOG") ||
+                                      preferencesManager.getUserEmail() == null ||
+                                      preferencesManager.getUserEmail().isEmpty();
+        
+        if (shouldReloadUserInfo) {
+            Log.d("LibraryActivity", "Need to reload user info, current data is insufficient");
             reloadUserInfo();
         } else {
-            userNameText.setText(displayName);
+            Log.d("LibraryActivity", "Using existing user data");
+            setUserDisplayInfo(displayName);
         }
-        
-        // Log para debug
-        Log.d("LibraryActivity", "Display name: " + displayName);
-        Log.d("LibraryActivity", "User email: " + preferencesManager.getUserEmail());
-        Log.d("LibraryActivity", "User name: " + preferencesManager.getUserName());
-        Log.d("LibraryActivity", "User ID: " + preferencesManager.getUserId());
+    }
+    
+    /**
+     * Define as informações de exibição do usuário na UI
+     */
+    private void setUserDisplayInfo(String displayName) {
+        if (userNameText != null) {
+            userNameText.setText(displayName);
+            Log.d("LibraryActivity", "Set userNameText to: '" + displayName + "'");
+            
+            // Carregar avatar se disponível
+            String avatarUrl = preferencesManager.getUserAvatar();
+            loadUserAvatar(avatarUrl);
+        } else {
+            Log.e("LibraryActivity", "userNameText is null!");
+        }
+    }
+    
+    /**
+     * Carrega o avatar do usuário
+     */
+    private void loadUserAvatar(String avatarUrl) {
+        ImageView userAvatar = findViewById(R.id.userAvatar);
+        if (userAvatar != null && avatarUrl != null && !avatarUrl.isEmpty()) {
+            Log.d("LibraryActivity", "Loading user avatar: " + avatarUrl);
+            ImageLoader.loadImage(this, avatarUrl, userAvatar);
+        } else {
+            Log.d("LibraryActivity", "No avatar to load or userAvatar view not found");
+            if (userAvatar != null) {
+                userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
+            }
+        }
     }
     
     private void reloadUserInfo() {
@@ -322,63 +363,11 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
                     Log.d("LibraryActivity", "=== USER DATA SUCCESS ===");
                     runOnUiThread(() -> {
                         try {
-                            // Extrair informações do userData.json
-                            String email = userData.optString("email", "");
-                            String username = userData.optString("username", "");
-                            String userId = userData.optString("userId", userData.optString("user_id", ""));
-                            String avatar = userData.optString("avatar", "");
-                            String firstName = userData.optString("first_name", "");
-                            String lastName = userData.optString("last_name", "");
-                            
-                            Log.d("LibraryActivity", "=== EXTRACTED DATA ===");
-                            Log.d("LibraryActivity", "Email: '" + email + "'");
-                            Log.d("LibraryActivity", "Username: '" + username + "'");
-                            Log.d("LibraryActivity", "First name: '" + firstName + "'");
-                            Log.d("LibraryActivity", "Last name: '" + lastName + "'");
-                            Log.d("LibraryActivity", "Avatar: '" + avatar + "'");
-                            
-                            // Criar nome de exibição
-                            String displayName = "";
-                            if (!firstName.isEmpty() || !lastName.isEmpty()) {
-                                displayName = (firstName + " " + lastName).trim();
-                                Log.d("LibraryActivity", "Using full name: '" + displayName + "'");
-                            }
-                            if (displayName.isEmpty() && !username.isEmpty()) {
-                                displayName = username;
-                                Log.d("LibraryActivity", "Using username: '" + displayName + "'");
-                            }
-                            if (displayName.isEmpty() && !email.isEmpty()) {
-                                displayName = email.split("@")[0]; // Usar parte antes do @ do email
-                                Log.d("LibraryActivity", "Using email prefix: '" + displayName + "'");
-                            }
-                            if (displayName.isEmpty()) {
-                                displayName = "Usuário GOG";
-                                Log.d("LibraryActivity", "Using fallback: '" + displayName + "'");
-                            }
-                            
-                            Log.d("LibraryActivity", "=== FINAL DISPLAY NAME: '" + displayName + "' ===");
-                            
-                            // Salvar informações atualizadas
-                            Log.d("LibraryActivity", "Saving auth data...");
-                            preferencesManager.saveAuthData(authToken, preferencesManager.getRefreshToken(), 
-                                                           email, displayName, userId, avatar);
-                            
-                            // Atualizar UI
-                            Log.d("LibraryActivity", "Updating UI with display name: '" + displayName + "'");
-                            Log.d("LibraryActivity", "userNameText is null: " + (userNameText == null));
-                            if (userNameText != null) {
-                                userNameText.setText(displayName);
-                                Log.d("LibraryActivity", "Successfully set userNameText to: '" + displayName + "'");
-                                Log.d("LibraryActivity", "userNameText current value: '" + userNameText.getText().toString() + "'");
-                            } else {
-                                Log.e("LibraryActivity", "userNameText is null! Cannot update username display");
-                            }
-                            
-                            Log.d("LibraryActivity", "=== USER INFO UPDATE COMPLETE ===");
+                            processUserData(userData, authToken);
                             
                         } catch (Exception e) {
                             Log.e("LibraryActivity", "=== ERROR PROCESSING USER DATA ===", e);
-                            userNameText.setText("Usuário GOG");
+                            setFallbackUserInfo();
                         }
                     });
                 }
@@ -387,13 +376,97 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
                 public void onError(String error) {
                     Log.e("LibraryActivity", "=== USER DATA ERROR: " + error + " ===");
                     runOnUiThread(() -> {
-                        userNameText.setText("Usuário GOG");
+                        setFallbackUserInfo();
                     });
                 }
             });
         } else {
             Log.w("LibraryActivity", "No auth token available!");
+            setFallbackUserInfo();
+        }
+    }
+    
+    /**
+     * Processa os dados do usuário recebidos da API
+     */
+    private void processUserData(JSONObject userData, String authToken) {
+        // Extrair informações do userData
+        String email = userData.optString("email", "");
+        String username = userData.optString("username", "");
+        String userId = userData.optString("userId", userData.optString("user_id", ""));
+        String avatar = userData.optString("avatar", "");
+        String firstName = userData.optString("first_name", "");
+        String lastName = userData.optString("last_name", "");
+        
+        Log.d("LibraryActivity", "=== EXTRACTED DATA ===");
+        Log.d("LibraryActivity", "Email: '" + email + "'");
+        Log.d("LibraryActivity", "Username: '" + username + "'");
+        Log.d("LibraryActivity", "First name: '" + firstName + "'");
+        Log.d("LibraryActivity", "Last name: '" + lastName + "'");
+        Log.d("LibraryActivity", "Avatar: '" + avatar + "'");
+        
+        // Criar nome de exibição
+        String displayName = createDisplayName(firstName, lastName, username, email);
+        
+        Log.d("LibraryActivity", "=== FINAL DISPLAY NAME: '" + displayName + "' ===");
+        
+        // Salvar informações atualizadas
+        Log.d("LibraryActivity", "Saving auth data...");
+        preferencesManager.saveAuthData(authToken, preferencesManager.getRefreshToken(), 
+                                       email, displayName, userId, avatar);
+        
+        // Atualizar UI
+        setUserDisplayInfo(displayName);
+        
+        Log.d("LibraryActivity", "=== USER INFO UPDATE COMPLETE ===");
+    }
+    
+    /**
+     * Cria o nome de exibição baseado nos dados disponíveis
+     */
+    private String createDisplayName(String firstName, String lastName, String username, String email) {
+        String displayName = "";
+        
+        // Tentar usar nome completo primeiro
+        if (!firstName.isEmpty() || !lastName.isEmpty()) {
+            displayName = (firstName + " " + lastName).trim();
+            Log.d("LibraryActivity", "Using full name: '" + displayName + "'");
+        }
+        
+        // Se não tem nome, usar username
+        if (displayName.isEmpty() && !username.isEmpty()) {
+            displayName = username;
+            Log.d("LibraryActivity", "Using username: '" + displayName + "'");
+        }
+        
+        // Se não tem username, usar parte do email
+        if (displayName.isEmpty() && !email.isEmpty()) {
+            displayName = email.split("@")[0];
+            Log.d("LibraryActivity", "Using email prefix: '" + displayName + "'");
+        }
+        
+        // Fallback final
+        if (displayName.isEmpty()) {
+            displayName = "Usuário GOG";
+            Log.d("LibraryActivity", "Using fallback: '" + displayName + "'");
+        }
+        
+        return displayName;
+    }
+    
+    /**
+     * Define informações de fallback quando não consegue carregar dados do usuário
+     */
+    private void setFallbackUserInfo() {
+        if (userNameText != null) {
             userNameText.setText("Usuário GOG");
+            Log.d("LibraryActivity", "Set fallback user info");
+        }
+        
+        // Definir avatar padrão
+        ImageView userAvatar = findViewById(R.id.userAvatar);
+        if (userAvatar != null) {
+            userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
         }
     }
     
