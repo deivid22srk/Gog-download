@@ -73,7 +73,6 @@ public class OAuthWebViewActivity extends AppCompatActivity {
         errorTitle = findViewById(R.id.errorTitle);
         errorMessage = findViewById(R.id.errorMessage);
         btnRetry = findViewById(R.id.btnRetry);
-        btnBack = findViewById(R.id.btnBack);
     }
     
     @SuppressLint("SetJavaScriptEnabled")
@@ -173,11 +172,6 @@ public class OAuthWebViewActivity extends AppCompatActivity {
     }
     
     private void setupClickListeners() {
-        btnBack.setOnClickListener(v -> {
-            setResult(Activity.RESULT_CANCELED);
-            finish();
-        });
-        
         btnRetry.setOnClickListener(v -> {
             hideError();
             loadAuthPage();

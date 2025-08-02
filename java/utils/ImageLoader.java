@@ -54,7 +54,7 @@ public class ImageLoader {
     
     public void load(Context context, String imageUrl, ImageView imageView) {
         if (imageUrl == null || imageUrl.isEmpty()) {
-            imageView.setImageResource(R.mipmap.ic_launcher);
+            imageView.setImageResource(android.R.drawable.ic_menu_gallery);
             return;
         }
         
@@ -66,7 +66,7 @@ public class ImageLoader {
         }
         
         // Definir placeholder enquanto carrega
-        imageView.setImageResource(R.mipmap.ic_launcher);
+        imageView.setImageResource(android.R.drawable.ic_menu_gallery);
         
         // Carregar imagem em background
         executorService.execute(() -> {

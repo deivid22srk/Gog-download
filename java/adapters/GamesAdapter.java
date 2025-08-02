@@ -172,7 +172,7 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             if (game.getCoverImage() != null && !game.getCoverImage().isEmpty()) {
                 ImageLoader.loadImage(context, game.getCoverImage(), gameCoverImage);
             } else {
-                gameCoverImage.setImageResource(R.mipmap.ic_launcher);
+                gameCoverImage.setImageResource(android.R.drawable.ic_menu_gallery);
             }
             
             // Status e ações baseados no estado do download
@@ -207,7 +207,6 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             statusIcon.setVisibility(View.GONE);
             
             actionButton.setText(context.getString(R.string.download));
-            actionButton.setBackgroundColor(context.getColor(R.color.gog_purple));
             actionButton.setEnabled(true);
         }
         
@@ -222,7 +221,6 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             );
             
             actionButton.setText(context.getString(R.string.cancel));
-            actionButton.setBackgroundColor(context.getColor(R.color.download_error));
             actionButton.setEnabled(true);
         }
         
@@ -230,10 +228,8 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             downloadProgressLayout.setVisibility(View.GONE);
             statusIcon.setVisibility(View.VISIBLE);
             statusIcon.setImageResource(android.R.drawable.ic_dialog_info);
-            statusIcon.setColorFilter(context.getColor(R.color.download_complete));
             
             actionButton.setText(context.getString(R.string.downloaded));
-            actionButton.setBackgroundColor(context.getColor(R.color.download_complete));
             actionButton.setEnabled(false);
         }
         
@@ -241,10 +237,8 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             downloadProgressLayout.setVisibility(View.GONE);
             statusIcon.setVisibility(View.VISIBLE);
             statusIcon.setImageResource(android.R.drawable.ic_dialog_alert);
-            statusIcon.setColorFilter(context.getColor(R.color.download_error));
             
             actionButton.setText(context.getString(R.string.retry));
-            actionButton.setBackgroundColor(context.getColor(R.color.download_error));
             actionButton.setEnabled(true);
         }
         
