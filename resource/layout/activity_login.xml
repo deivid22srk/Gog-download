@@ -14,7 +14,7 @@
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginBottom="32dp"
-        android:src="@mipmap/ic_launcher"
+        android:src="@android:drawable/ic_menu_gallery"
         android:contentDescription="GOG Logo" />
 
     <com.google.android.material.textview.MaterialTextView
