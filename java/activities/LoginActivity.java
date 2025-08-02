@@ -227,10 +227,10 @@ public class LoginActivity extends AppCompatActivity {
                 
                 runOnUiThread(() -> {
                     try {
-                        // Extrair informações do usuário
+                        // Extrair informações do usuário baseado na documentação da API
                         String email = userInfo.optString("email", "usuario@gog.com");
                         String username = userInfo.optString("username", "");
-                        String userId = userInfo.optString("user_id", userInfo.optString("id", ""));
+                        String userId = userInfo.optString("userId", userInfo.optString("user_id", userInfo.optString("id", "")));
                         String avatar = userInfo.optString("avatar", userInfo.optString("avatar_url", ""));
                         
                         // Se não há username, tentar usar outras propriedades
@@ -239,6 +239,14 @@ public class LoginActivity extends AppCompatActivity {
                         }
                         if (username.trim().isEmpty()) {
                             username = userInfo.optString("display_name", "");
+                        }
+                        
+                        // Se ainda não temos username, usar parte do email
+                        if (username.trim().isEmpty() && !email.isEmpty()) {
+                            int atIndex = email.indexOf('@');
+                            if (atIndex > 0) {
+                                username = email.substring(0, atIndex);
+                            }
                         }
                         
                         Log.d(TAG, "User info - email: " + email + ", username: " + username + ", userId: " + userId);

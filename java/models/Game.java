@@ -60,7 +60,7 @@ public class Game implements Serializable {
         game.title = json.optString("title", "Jogo ID: " + game.id);
         game.slug = json.optString("slug", "game-" + game.id);
         
-        // Imagens
+        // Imagens - tratar diferentes formatos da API
         JSONObject images = json.optJSONObject("images");
         if (images != null) {
             game.coverImage = images.optString("sidebarIcon", "");
@@ -68,6 +68,16 @@ public class Game implements Serializable {
                 game.coverImage = images.optString("icon", "");
             }
             game.backgroundImage = images.optString("background", "");
+        } else {
+            // Tentar campo image direto (formato getFilteredProducts)
+            String directImage = json.optString("image", "");
+            if (!directImage.isEmpty()) {
+                // Adicionar protocolo se necessário
+                if (directImage.startsWith("//")) {
+                    directImage = "https:" + directImage;
+                }
+                game.coverImage = directImage;
+            }
         }
         
         // Descrição

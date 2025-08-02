@@ -35,7 +35,7 @@ public class GOGAuthManager {
     
     // URLs da API do GOG - endpoints reais
     private static final String TOKEN_URL = "https://auth.gog.com/token";
-    private static final String USER_INFO_URL = "https://embed.gog.com/userData.json";
+    private static final String USER_INFO_URL = "https://api.gog.com/user/data/games";
     private static final String REFRESH_TOKEN_URL = "https://auth.gog.com/token";
     
     // Client ID e configurações OAuth do GOG
@@ -242,11 +242,13 @@ public class GOGAuthManager {
             return;
         }
         
+        // Para api.gog.com, usar Authorization Bearer header
         Request request = new Request.Builder()
                 .url(USER_INFO_URL)
                 .get()
                 .addHeader("Authorization", "Bearer " + authToken)
                 .addHeader("User-Agent", "GOGDownloaderApp/1.0")
+                .addHeader("Accept", "application/json")
                 .build();
         
         httpClient.newCall(request).enqueue(new Callback() {
@@ -266,22 +268,23 @@ public class GOGAuthManager {
                     
                     if (response.isSuccessful() && responseBody != null) {
                         try {
-                            JSONObject userInfo = new JSONObject(responseString);
+                            // Para user/data/games, se a resposta for bem-sucedida,
+                            // significa que o token é válido e o usuário está autenticado
+                            JSONObject responseJson = new JSONObject(responseString);
                             
-                            // Log dados recebidos para debug
-                            Log.d(TAG, "User info retrieved successfully. Parsing:");
-                            if (userInfo.has("email")) Log.d(TAG, "Email: " + userInfo.optString("email"));
-                            if (userInfo.has("username")) Log.d(TAG, "Username: " + userInfo.optString("username"));
-                            if (userInfo.has("user_id")) Log.d(TAG, "User ID: " + userInfo.optString("user_id"));
-                            if (userInfo.has("id")) Log.d(TAG, "ID: " + userInfo.optString("id"));
-                            if (userInfo.has("name")) Log.d(TAG, "Name: " + userInfo.optString("name"));
-                            if (userInfo.has("display_name")) Log.d(TAG, "Display name: " + userInfo.optString("display_name"));
+                            Log.d(TAG, "Token validation successful - API responded correctly");
+                            Log.d(TAG, "Response: " + responseString.substring(0, Math.min(200, responseString.length())));
+                            
+                            // Criar objeto de userInfo simplificado
+                            JSONObject userInfo = new JSONObject();
+                            userInfo.put("isLoggedIn", true);
+                            userInfo.put("tokenValid", true);
                             
                             callback.onSuccess(userInfo);
                             
                         } catch (JSONException e) {
-                            Log.e(TAG, "Error parsing user info", e);
-                            callback.onError("Erro ao processar informações do usuário");
+                            Log.e(TAG, "Error parsing token validation response", e);
+                            callback.onError("Erro ao processar resposta de validação");
                         }
                     } else {
                         Log.e(TAG, "User info failed with code: " + response.code() + " body: " + responseString);

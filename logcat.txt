@@ -1,0 +1,902 @@
+***********************************************************************************************
+***********************************************************************************************
+**                                                                                       **
+**    Exported logcat reader for com.example.gogdownloader on 2025/08/02 at 14:41:10  **
+**                                                                                       **
+***********************************************************************************************
+***********************************************************************************************
+
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.120 15069 15069
+    |-- Tag: e.gogdownloader
+    |-- Message: Using CollectorTypeCC GC.
+------------------------------------------------
+
+|-- Log Type: E
+    |-- Date: 08-02 14:40:24.126 15069 15069
+    |-- Tag: e.gogdownloader
+    |-- Message: Not starting debugger since process cannot load the jdwp agent.
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:24.311 15069 15069
+    |-- Tag: LoginActivity
+    |-- Message: No existing login found
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:24.329 15069 15069
+    |-- Tag: HWUI    
+    |-- Message: Unknown dataspace 0
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:24.384 15069 15069
+    |-- Tag: libc    
+    |-- Message: Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:24.380 15069 15069
+    |-- Tag: e.gogdownloader: type=1400 audit(0.0:423782): avc
+    |-- Message:  denied  { read } for  name="u:object_r:vendor_display_prop:s0" dev="tmpfs" ino=13389 scontext=u:r:untrusted_app:s0:c210,c257,c512,c768 tcontext=u:object_r:vendor_display_prop:s0 tclass=file permissive=0 app=com.example.gogdownloader
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: QUALCOMM build                   
+    |-- Message: 923a446bf8, I23d7d7df15
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: Build Date                       
+    |-- Message: 09/05/24
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: OpenGL ES Shader Compiler Version
+    |-- Message: EV031.35.01.12
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: Local Branch                     
+    |-- Message: 
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: Remote Branch                    
+    |-- Message: refs/tags/AU_LINUX_ANDROID_LA.UM.9.14.11.00.00.571.148
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: Remote Branch                    
+    |-- Message: NONE
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: Reconstruct Branch               
+    |-- Message: NOTHING
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: Build Config                     
+    |-- Message: S P 10.0.7 AArch64
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.387 15069 15095
+    |-- Tag: AdrenoGLES-0: Driver Path                      
+    |-- Message: /vendor/lib64/egl/libGLESv2_adreno.so
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.392 15069 15095
+    |-- Tag: AdrenoGLES-0: PFP: 0x016ee201, ME
+    |-- Message: 0x00000000
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:24.407 15069 15095
+    |-- Tag: HWUI    
+    |-- Message: setGrContext nullptr-->validptr
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.344 15069 15069
+    |-- Tag: e.gogdownloader: Unable to open libdolphin.so: dlopen failed
+    |-- Message: library "libdolphin.so" not found.
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.427 15069 15069
+    |-- Tag: LoginActivity
+    |-- Message: Starting OAuth login process
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.479 15069 15069
+    |-- Tag: WebViewFactory
+    |-- Message: Loading com.google.android.webview version 138.0.7204.168 (code 720416833)
+------------------------------------------------
+
+|-- Log Type: V
+    |-- Date: 08-02 14:40:25.483 15069 15069
+    |-- Tag: ResourcesManager: The following library key has been added
+    |-- Message: ResourcesKey{ mHash=dfc389f8 mResDir=null mSplitDirs=[] mOverlayDirs=[/product/overlay/NavigationBarMode3Button/NavigationBarMode3ButtonOverlay.apk,/product/overlay/FontRookeryRegular/FontRookeryRegularOverlay.apk,/data/resource-cache/com.android.systemui-neutral-SFJs.frro,/data/resource-cache/com.android.systemui-accent-oh0l.frro,/data/resource-cache/com.android.systemui-dynamic-DuhH.frro] mLibDirs=[/data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/base.apk,/data/app/~~Pey_nIMxugh1SG_FUHXuIA==/com.google.android.trichromelibrary_720416833-udEihzhdmFWnBKagp22f2A==/base.apk,/system_ext/framework/androidx.window.extensions.jar] mDisplayId=0 mOverrideConfig=v35 mCompatInfo={280dpi always-compat} mLoaders=[]}
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.484 15069 15069
+    |-- Tag: ziparchive: Unable to open '/data/app/~~Pey_nIMxugh1SG_FUHXuIA==/com.google.android.trichromelibrary_720416833-udEihzhdmFWnBKagp22f2A==/base.dm'
+    |-- Message: No such file or directory
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.484 15069 15069
+    |-- Tag: ziparchive: Unable to open '/data/app/~~Pey_nIMxugh1SG_FUHXuIA==/com.google.android.trichromelibrary_720416833-udEihzhdmFWnBKagp22f2A==/base.dm'
+    |-- Message: No such file or directory
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.485 15069 15069
+    |-- Tag: e.gogdownloader
+    |-- Message: Entry not found
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.485 15069 15069
+    |-- Tag: nativeloader
+    |-- Message: Configuring clns-8 for other apk /data/app/~~Pey_nIMxugh1SG_FUHXuIA==/com.google.android.trichromelibrary_720416833-udEihzhdmFWnBKagp22f2A==/base.apk. target_sdk_version=35, uses_libraries=ALL, library_path=/data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/lib/arm64:/data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/base.apk!/lib/arm64-v8a:/data/app/~~Pey_nIMxugh1SG_FUHXuIA==/com.google.android.trichromelibrary_720416833-udEihzhdmFWnBKagp22f2A==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.485 15069 15069
+    |-- Tag: nativeloader: Extending system_exposed_libraries
+    |-- Message: libbinauralrenderer_wrapper.qti.so:libhoaeffects.qti.so:libjni_helper.motocameradesktop.so:libimgTuner_jni.motoimagetuner.so:libupdateprof.qti.so:libdiag_system.qti.so:libqape.qti.so:libqesdk_ndk_platform.qti.so:liblistenjni.qti.so
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.487 15069 15069
+    |-- Tag: ApplicationLoaders: Returning zygote-cached class loader
+    |-- Message: /system_ext/framework/androidx.window.extensions.jar
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.489 15069 15069
+    |-- Tag: nativeloader
+    |-- Message: Configuring clns-9 for other apk /data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/lib/arm64:/data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/base.apk!/lib/arm64-v8a:/data/app/~~Pey_nIMxugh1SG_FUHXuIA==/com.google.android.trichromelibrary_720416833-udEihzhdmFWnBKagp22f2A==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.509 15069 15069
+    |-- Tag: cr_WVCFactoryProvider
+    |-- Message: version=138.0.7204.168 (720416833) minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.512 15069 15069
+    |-- Tag: nativeloader: Load /data/app/~~Pey_nIMxugh1SG_FUHXuIA==/com.google.android.trichromelibrary_720416833-udEihzhdmFWnBKagp22f2A==/base.apk!/lib/arm64-v8a/libmonochrome_64.so using ns clns-9 from class loader (caller=/data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/base.apk)
+    |-- Message: ok
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.514 15069 15069
+    |-- Tag: nativeloader: Load /system/lib64/libwebviewchromium_plat_support.so using ns clns-9 from class loader (caller=/data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/base.apk)
+    |-- Message: ok
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.518 15069 15117
+    |-- Tag: chromium: [0802/144025.517978:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.
+    |-- Message: No such file or directory (2)
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.519 15069 15117
+    |-- Tag: chromium: [0802/144025.519148:INFO:android_webview/browser/variations/variations_seed_loader.cc:67] Failed to open file for reading.
+    |-- Message: No such file or directory (2)
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.522 15069 15069
+    |-- Tag: cr_LibraryLoader
+    |-- Message: Successfully loaded native library
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.523 15069 15069
+    |-- Tag: cr_CachingUmaRecorder
+    |-- Message: Flushed 8 samples from 8 histograms, 0 samples were dropped.
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.525 15069 15069
+    |-- Tag: cr_CombinedPProvider
+    |-- Message: #registerProvider() provider:WV.d9@53886bd isPolicyCacheEnabled:false policyProvidersSize:0
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.531 15069 15069
+    |-- Tag: cr_PolicyProvider
+    |-- Message: #setManagerAndSource() 0
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.550 15069 15069
+    |-- Tag: cr_CombinedPProvider
+    |-- Message: #linkNativeInternal() 1
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.554 15069 15069
+    |-- Tag: cr_AppResProvider
+    |-- Message: #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.554 15069 15069
+    |-- Tag: cr_PolicyProvider
+    |-- Message: #notifySettingsAvailable() 0
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.554 15069 15069
+    |-- Tag: cr_CombinedPProvider
+    |-- Message: #onSettingsAvailable() 0
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.554 15069 15069
+    |-- Tag: cr_CombinedPProvider
+    |-- Message: #flushPolicies()
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.579 15069 15069
+    |-- Tag: chromium: [WARNING:android_webview/browser/network_service/net_helpers.cc:143] HTTP Cache size is
+    |-- Message: 20971520
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:25.697 15069 15069
+    |-- Tag: OAuthWebViewActivity: Loading GOG auth page
+    |-- Message: https://auth.gog.com/auth?client_id=46899977096215655&redirect_uri=https://embed.gog.com/on_login_success?origin=client&response_type=code&layout=client2
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.706 15069 15131
+    |-- Tag: cr_media
+    |-- Message: BLUETOOTH_CONNECT permission is missing.
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.709 15069 15131
+    |-- Tag: cr_media
+    |-- Message: getBluetoothAdapter() requires BLUETOOTH permission
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.709 15069 15131
+    |-- Tag: cr_media: registerBluetoothIntentsIfNeeded
+    |-- Message: Requires BLUETOOTH permission
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.725 15069 15153
+    |-- Tag: CameraManagerGlobal
+    |-- Message: Connecting to camera service
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.748 15069 15069
+    |-- Tag: e.gogdownloader: type=1400 audit(0.0:423783): avc
+    |-- Message:  denied  { read } for  name="u:object_r:vendor_display_prop:s0" dev="tmpfs" ino=13389 scontext=u:r:untrusted_app:s0:c210,c257,c512,c768 tcontext=u:object_r:vendor_display_prop:s0 tclass=file permissive=0 app=com.example.gogdownloader
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.750 15069 15069
+    |-- Tag: libc    
+    |-- Message: Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.755 15069 15151
+    |-- Tag: AdrenoVK-0
+    |-- Message: ===== BEGIN DUMP OF OVERRIDDEN SETTINGS =====
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.755 15069 15151
+    |-- Tag: AdrenoVK-0
+    |-- Message: ===== END DUMP OF OVERRIDDEN SETTINGS =====
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: QUALCOMM build          
+    |-- Message: 923a446bf8, I23d7d7df15
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Build Date              
+    |-- Message: 09/05/24
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Shader Compiler Version 
+    |-- Message: EV031.35.01.12
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Local Branch            
+    |-- Message: 
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Remote Branch           
+    |-- Message: refs/tags/AU_LINUX_ANDROID_LA.UM.9.14.11.00.00.571.148
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Remote Branch           
+    |-- Message: NONE
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Reconstruct Branch      
+    |-- Message: NOTHING
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Build Config            
+    |-- Message: S P 10.0.7 AArch64
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:25.757 15069 15151
+    |-- Tag: AdrenoVK-0: Driver Path             
+    |-- Message: /vendor/lib64/hw/vulkan.adreno.so
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.993 15069 15143
+    |-- Tag: VideoCapabilities
+    |-- Message: Unsupported mime image/vnd.android.heic
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:25.993 15069 15143
+    |-- Tag: VideoCapabilities
+    |-- Message: Unsupported mime image/vnd.android.heic
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:26.378 15069 15069
+    |-- Tag: VRI[LoginActivity]
+    |-- Message: visibilityChanged oldVisibility=true newVisibility=false
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:26.385 15069 15095
+    |-- Tag: Surface 
+    |-- Message: Surface::disconnect
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:26.385 15069 15095
+    |-- Tag: BufferQueueProducer: [com.example.gogdownloader/com.example.gogdownloader.activities.LoginActivity#66663(BLAST Consumer)pid:15069](id:3add00000000,api:1,p:15069,c:15069) disconnect
+    |-- Message: api 1
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:26.765 15069 15069
+    |-- Tag: OAuthWebViewActivity: URL loading
+    |-- Message: https://login.gog.com/auth?client_id=46899977096215655&layout=client2&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient&response_type=code
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:27.339 15069 15069
+    |-- Tag: OAuthWebViewActivity: Page started loading
+    |-- Message: https://login.gog.com/auth?client_id=46899977096215655&layout=client2&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient&response_type=code
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:27.341 15069 15126
+    |-- Tag: CompatChangeReporter: Compat change id reported: 263076149; UID 10466; state
+    |-- Message: ENABLED
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:30.957 15069 15069
+    |-- Tag: AssistStructure: Flattened final assist data
+    |-- Message: 3752 bytes, containing 1 windows, 12 views
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:32.600 15069 15069
+    |-- Tag: OAuthWebViewActivity: Page finished loading
+    |-- Message: https://login.gog.com/auth?client_id=46899977096215655&layout=client2&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient&response_type=code
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:34.553 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:6cc4df7f
+    |-- Message: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:34.554 15069 15069
+    |-- Tag: InputMethodManager
+    |-- Message: showSoftInput() view=android.webkit.WebView{7599736 VFEDHVC.. .F...... 0,0-720,1327 #7f080221 app:id/webView aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:34.631 15069 15069
+    |-- Tag: InsetsController
+    |-- Message: show(ime(), fromIme=true)
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:34.642 15069 15235
+    |-- Tag: InteractionJankMonitor
+    |-- Message: Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.example.gogdownloader
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:34.853 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:6cc4df7f
+    |-- Message: onShown
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:37.760 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:906a0ea9
+    |-- Message: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:37.760 15069 15069
+    |-- Tag: InputMethodManager
+    |-- Message: showSoftInput() view=android.webkit.WebView{7599736 VFEDHVC.. .F...... 0,0-720,741 #7f080221 app:id/webView aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:37.795 15069 15069
+    |-- Tag: InsetsController
+    |-- Message: show(ime(), fromIme=true)
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:37.795 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:684ac582
+    |-- Message: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:37.797 15069 15069
+    |-- Tag: InsetsController
+    |-- Message: show(ime(), fromIme=true)
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:37.797 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:906a0ea9
+    |-- Message: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:45.941 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:1f74b4d
+    |-- Message: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:45.941 15069 15069
+    |-- Tag: InputMethodManager
+    |-- Message: showSoftInput() view=android.webkit.WebView{7599736 VFEDHVC.. .F...... 0,0-720,818 #7f080221 app:id/webView aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:45.945 15069 15069
+    |-- Tag: InsetsController
+    |-- Message: show(ime(), fromIme=true)
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:45.946 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:1f74b4d
+    |-- Message: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:46.509 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:779392c2
+    |-- Message: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:46.513 15069 15233
+    |-- Tag: RemoteInputConnectionImpl
+    |-- Message: requestCursorUpdates on inactive InputConnection
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:40:46.545 15069 15069
+    |-- Tag: InsetsController
+    |-- Message: hide(ime(), fromIme=true)
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:46.806 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:e381618f
+    |-- Message: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_ON_ANIMATION_STATE_CHANGED fromUser false
+------------------------------------------------
+
+|-- Log Type: I
+    |-- Date: 08-02 14:40:46.807 15069 15069
+    |-- Tag: ImeTracker: com.example.gogdownloader:779392c2
+    |-- Message: onHidden
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:40:51.464 15069 15078
+    |-- Tag: e.gogdownloader: ApkAssets
+    |-- Message: Deleting an ApkAssets object '<empty> and /data/app/~~j4TwTSUfPzrPE8aB9WOtzw==/com.google.android.webview-u1Ws7D1EJsuNgKEgVsQSjw==/base.apk' with 2 weak references
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:01.105 15069 15069
+    |-- Tag: OAuthWebViewActivity: URL loading
+    |-- Message: https://auth.gog.com/auth?client_id=46899977096215655&layout=client2&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient&response_type=code&user_id_token=0JnQ2OI08135lNPzUKhms7psv72wsSmq2A4ys8nB05ZMdUWSR3x6avF6YYzKYoXe
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:01.520 15069 15069
+    |-- Tag: OAuthWebViewActivity: URL loading
+    |-- Message: https://embed.gog.com/on_login_success?origin=client&code=3ERLzFp7pnuBELM-LZSbWDcfowls0-H4wCmYTzKdJasXUM6_0ons3QY3OOcC2DuVbrzWaF-SJZTcR3Jo3fUsuAR0ecHtiqcbbOZKFJD3vXpWKb7Al0COnT4i3-mecCQ2YnP-XQBbnGjz5BdGQcwIAhjBGe4y1vEMlt23eGreJhTYLCsgc5dnt9i7J76Csuvp
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.456 15069 15069
+    |-- Tag: OAuthWebViewActivity: Page started loading
+    |-- Message: https://embed.gog.com/on_login_success?origin=client&code=3ERLzFp7pnuBELM-LZSbWDcfowls0-H4wCmYTzKdJasXUM6_0ons3QY3OOcC2DuVbrzWaF-SJZTcR3Jo3fUsuAR0ecHtiqcbbOZKFJD3vXpWKb7Al0COnT4i3-mecCQ2YnP-XQBbnGjz5BdGQcwIAhjBGe4y1vEMlt23eGreJhTYLCsgc5dnt9i7J76Csuvp
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.456 15069 15069
+    |-- Tag: OAuthWebViewActivity: Redirect detected
+    |-- Message: https://embed.gog.com/on_login_success?origin=client&code=3ERLzFp7pnuBELM-LZSbWDcfowls0-H4wCmYTzKdJasXUM6_0ons3QY3OOcC2DuVbrzWaF-SJZTcR3Jo3fUsuAR0ecHtiqcbbOZKFJD3vXpWKb7Al0COnT4i3-mecCQ2YnP-XQBbnGjz5BdGQcwIAhjBGe4y1vEMlt23eGreJhTYLCsgc5dnt9i7J76Csuvp
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.456 15069 15069
+    |-- Tag: OAuthWebViewActivity: Handling auth redirect
+    |-- Message: https://embed.gog.com/on_login_success?origin=client&code=3ERLzFp7pnuBELM-LZSbWDcfowls0-H4wCmYTzKdJasXUM6_0ons3QY3OOcC2DuVbrzWaF-SJZTcR3Jo3fUsuAR0ecHtiqcbbOZKFJD3vXpWKb7Al0COnT4i3-mecCQ2YnP-XQBbnGjz5BdGQcwIAhjBGe4y1vEMlt23eGreJhTYLCsgc5dnt9i7J76Csuvp
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.456 15069 15069
+    |-- Tag: OAuthWebViewActivity: Authorization code received
+    |-- Message: 3ERLzFp7pnuBELM-LZSbWDcfowls0-H4wCmYTzKdJasXUM6_0ons3QY3OOcC2DuVbrzWaF-SJZTcR3Jo3fUsuAR0ecHtiqcbbOZKFJD3vXpWKb7Al0COnT4i3-mecCQ2YnP-XQBbnGjz5BdGQcwIAhjBGe4y1vEMlt23eGreJhTYLCsgc5dnt9i7J76Csuvp
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.509 15069 15069
+    |-- Tag: LoginActivity
+    |-- Message: OAuth code received, exchanging for token
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.509 15069 15069
+    |-- Tag: GOGAuthManager
+    |-- Message: Exchanging authorization code for token
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:02.529 15069 15069
+    |-- Tag: libc    
+    |-- Message: Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:02.524 15069 15069
+    |-- Tag: e.gogdownloader: type=1400 audit(0.0:423792): avc
+    |-- Message:  denied  { read } for  name="u:object_r:vendor_display_prop:s0" dev="tmpfs" ino=13389 scontext=u:r:untrusted_app:s0:c210,c257,c512,c768 tcontext=u:object_r:vendor_display_prop:s0 tclass=file permissive=0 app=com.example.gogdownloader
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.561 15069 15336
+    |-- Tag: TrafficStats
+    |-- Message: tagSocket(274) with statsTag=0xffffffff, statsUid=-1
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:02.999 15069 15069
+    |-- Tag: OAuthWebViewActivity: Page finished loading
+    |-- Message: https://embed.gog.com/on_login_success?origin=client&code=3ERLzFp7pnuBELM-LZSbWDcfowls0-H4wCmYTzKdJasXUM6_0ons3QY3OOcC2DuVbrzWaF-SJZTcR3Jo3fUsuAR0ecHtiqcbbOZKFJD3vXpWKb7Al0COnT4i3-mecCQ2YnP-XQBbnGjz5BdGQcwIAhjBGe4y1vEMlt23eGreJhTYLCsgc5dnt9i7J76Csuvp
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.096 15069 15069
+    |-- Tag: VRI[OAuthWebViewActivity]
+    |-- Message: visibilityChanged oldVisibility=true newVisibility=false
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.103 15069 15095
+    |-- Tag: Surface 
+    |-- Message: Surface::disconnect
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.103 15069 15095
+    |-- Tag: BufferQueueProducer: [com.example.gogdownloader/com.example.gogdownloader.activities.OAuthWebViewActivity#66671(BLAST Consumer)pid:15069](id:3add00000001,api:1,p:15069,c:15069) disconnect
+    |-- Message: api 1
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:03.112 15069 15069
+    |-- Tag: cr_AwContents
+    |-- Message: WebView.destroy() called while WebView is still attached to window.
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:03.114 15069 15069
+    |-- Tag: WindowOnBackDispatcher: sendCancelIfRunning
+    |-- Message: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@c301763
+------------------------------------------------
+
+|-- Log Type: E
+    |-- Date: 08-02 14:41:03.139 15069 15069
+    |-- Tag: chromium
+    |-- Message: [ERROR:android_webview/browser/aw_browser_terminator.cc:165] Renderer process (15122) crash detected (code -1).
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.154 15069 15336
+    |-- Tag: GOGAuthManager: Token exchange response code
+    |-- Message: 200
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.154 15069 15336
+    |-- Tag: GOGAuthManager: Token exchange response
+    |-- Message: {"access_token":"nlzcKeOVMCvG26uw0WKE3dFzDS97EHrKjvTViXDTQsqpf0vSS5oopOcxa5p4uH5ziTOjo5JiUvm1H9WTvup7GpexUPX82uBF0D1p0lCW-HjC1EKSjbMUBM4eDEjD1HSnWEipYajvJimtLpFjZs45FYDkkgMthIC1hnLOs6hc6YnZncMtliXG29gRw37Z-P1D","expires_in":3600,"token_type":"bearer","scope":"","session_id":"7534044640671179343","refresh_token":"JAttBRgCLg01UZeoKgbQWnGLe9TiAjuFQzXVL0sVUP8saMQMH5AVUfj3x6eV1thg","user_id":"58857515518396791"}
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.154 15069 15336
+    |-- Tag: GOGAuthManager
+    |-- Message: Token exchange successful
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.154 15069 15336
+    |-- Tag: LoginActivity
+    |-- Message: Token exchange successful
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.155 15069 15336
+    |-- Tag: GOGAuthManager
+    |-- Message: Getting user info
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.604 15069 15346
+    |-- Tag: GOGAuthManager: User info response code
+    |-- Message: 200
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.604 15069 15346
+    |-- Tag: GOGAuthManager: User info response
+    |-- Message: {"country":"BR","currencies":[{"code":"BRL","symbol":"R$"},{"code":"USD","symbol":"$"}],"selectedCurrency":{"code":"BRL","symbol":"R$"},"preferredLanguage":{"code":"en","name":"English"},"ratingBrand":"PEGI","isLoggedIn":false,"checksum":{"cart":null,"games":null,"wishlist":null,"reviews_votes":null,"games_rating":null},"updates":{"products":0,"messages":0,"forum":0,"total":0},"personalizedProductPrices":[],"personalizedSeriesPrices":[]}
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.605 15069 15346
+    |-- Tag: GOGAuthManager: User info retrieved successfully. Full response
+    |-- Message: {"country":"BR","currencies":[{"code":"BRL","symbol":"R$"},{"code":"USD","symbol":"$"}],"selectedCurrency":{"code":"BRL","symbol":"R$"},"preferredLanguage":{"code":"en","name":"English"},"ratingBrand":"PEGI","isLoggedIn":false,"checksum":{"cart":null,"games":null,"wishlist":null,"reviews_votes":null,"games_rating":null},"updates":{"products":0,"messages":0,"forum":0,"total":0},"personalizedProductPrices":[],"personalizedSeriesPrices":[]}
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.605 15069 15346
+    |-- Tag: GOGAuthManager
+    |-- Message: Parsing user info:
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.605 15069 15346
+    |-- Tag: GOGAuthManager: Is logged in
+    |-- Message: false
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:03.605 15069 15346
+    |-- Tag: GOGAuthManager
+    |-- Message: User appears to not be logged in according to API response
+------------------------------------------------
+
+|-- Log Type: E
+    |-- Date: 08-02 14:41:03.605 15069 15346
+    |-- Tag: LoginActivity: User info error
+    |-- Message: Usuário não está logado no GOG
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:03.770 15069 15069
+    |-- Tag: Activity
+    |-- Message: Can request only one set of permissions at a time
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.790 15069 15069
+    |-- Tag: DatabaseHelper
+    |-- Message: Retrieved 0 games from database
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.790 15069 15069
+    |-- Tag: GOGLibraryManager: Loading user library from GOG API - Step 1
+    |-- Message: Getting user games
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.793 15069 15359
+    |-- Tag: TrafficStats
+    |-- Message: tagSocket(247) with statsTag=0xffffffff, statsUid=-1
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.802 15069 15069
+    |-- Tag: AutofillManager
+    |-- Message: view not autofillable - not passing ime action check
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:03.802 15069 15069
+    |-- Tag: AutofillManager
+    |-- Message: view not autofillable - not passing ime action check
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:03.823 15069 15069
+    |-- Tag: libc    
+    |-- Message: Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:03.820 15069 15069
+    |-- Tag: e.gogdownloader: type=1400 audit(0.0:423799): avc
+    |-- Message:  denied  { read } for  name="u:object_r:vendor_display_prop:s0" dev="tmpfs" ino=13389 scontext=u:r:untrusted_app:s0:c210,c257,c512,c768 tcontext=u:object_r:vendor_display_prop:s0 tclass=file permissive=0 app=com.example.gogdownloader
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:04.324 15069 15069
+    |-- Tag: VRI[LoginActivity]
+    |-- Message: visibilityChanged oldVisibility=true newVisibility=false
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:04.335 15069 15095
+    |-- Tag: Surface 
+    |-- Message: Surface::disconnect
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:04.335 15069 15095
+    |-- Tag: BufferQueueProducer: [com.example.gogdownloader/com.example.gogdownloader.activities.LoginActivity#66691(BLAST Consumer)pid:15069](id:3add00000002,api:1,p:15069,c:15069) disconnect
+    |-- Message: api 1
+------------------------------------------------
+
+|-- Log Type: W
+    |-- Date: 08-02 14:41:04.345 15069 15069
+    |-- Tag: WindowOnBackDispatcher: sendCancelIfRunning
+    |-- Message: isInProgress=false callback=android.view.ViewRootImpl$$ExternalSyntheticLambda11@db2a0e2
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:04.383 15069 15359
+    |-- Tag: GOGLibraryManager: User games response code
+    |-- Message: 403
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:04.383 15069 15359
+    |-- Tag: GOGLibraryManager: User games response
+    |-- Message: {"status":403,"code":403,"message":"Full authentication is required to access this resource."}
+------------------------------------------------
+
+|-- Log Type: E
+    |-- Date: 08-02 14:41:04.383 15069 15359
+    |-- Tag: GOGLibraryManager: User games loading failed with code
+    |-- Message: 403
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:04.389 15069 15069
+    |-- Tag: DatabaseHelper
+    |-- Message: Retrieved 0 games from database
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:06.627 15069 15069
+    |-- Tag: DatabaseHelper
+    |-- Message: Retrieved 0 games from database
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:06.627 15069 15069
+    |-- Tag: GOGLibraryManager: Loading user library from GOG API - Step 1
+    |-- Message: Getting user games
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:07.341 15069 15359
+    |-- Tag: GOGLibraryManager: User games response code
+    |-- Message: 403
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:07.341 15069 15359
+    |-- Tag: GOGLibraryManager: User games response
+    |-- Message: {"status":403,"code":403,"message":"Full authentication is required to access this resource."}
+------------------------------------------------
+
+|-- Log Type: E
+    |-- Date: 08-02 14:41:07.341 15069 15359
+    |-- Tag: GOGLibraryManager: User games loading failed with code
+    |-- Message: 403
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:07.351 15069 15069
+    |-- Tag: DatabaseHelper
+    |-- Message: Retrieved 0 games from database
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:09.894 15069 15069
+    |-- Tag: VRI[LibraryActivity]
+    |-- Message: visibilityChanged oldVisibility=true newVisibility=false
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:09.901 15069 15069
+    |-- Tag: AutofillManager
+    |-- Message: view not autofillable - not passing ime action check
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:09.906 15069 15095
+    |-- Tag: Surface 
+    |-- Message: Surface::disconnect
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:09.906 15069 15095
+    |-- Tag: BufferQueueProducer: [com.example.gogdownloader/com.example.gogdownloader.activities.LibraryActivity#66714(BLAST Consumer)pid:15069](id:3add00000003,api:1,p:15069,c:15069) disconnect
+    |-- Message: api 1
+------------------------------------------------
+
+|-- Log Type: D
+    |-- Date: 08-02 14:41:09.906 15069 15095
+    |-- Tag: HWUI    
+    |-- Message: endAllActiveAnimators on 0xb40000715619a400 (RippleDrawable) with handle 0xb40000715838b0a0
+------------------------------------------------

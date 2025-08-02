@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gogdownloader.R;
 import com.example.gogdownloader.adapters.GamesAdapter;
+import com.example.gogdownloader.api.GOGAuthManager;
 import com.example.gogdownloader.api.GOGLibraryManager;
 import com.example.gogdownloader.database.DatabaseHelper;
 import com.example.gogdownloader.models.Game;
@@ -27,6 +28,8 @@ import com.example.gogdownloader.services.DownloadService;
 import com.example.gogdownloader.utils.PermissionHelper;
 import com.example.gogdownloader.utils.PreferencesManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -228,12 +231,72 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     
     private void updateUserInfo() {
         String displayName = preferencesManager.getDisplayName();
-        userNameText.setText(displayName);
+        
+        // Se o nome exibido for vazio ou padrão, tentar recarregar as informações do usuário
+        if (displayName == null || displayName.isEmpty() || displayName.equals("Usuário GOG")) {
+            Log.d("LibraryActivity", "Display name is empty or default, trying to reload user info");
+            reloadUserInfo();
+        } else {
+            userNameText.setText(displayName);
+        }
         
         // Log para debug
         Log.d("LibraryActivity", "Display name: " + displayName);
         Log.d("LibraryActivity", "User email: " + preferencesManager.getUserEmail());
         Log.d("LibraryActivity", "User name: " + preferencesManager.getUserName());
+        Log.d("LibraryActivity", "User ID: " + preferencesManager.getUserId());
+    }
+    
+    private void reloadUserInfo() {
+        String authToken = preferencesManager.getAuthToken();
+        if (authToken != null && !authToken.isEmpty()) {
+            GOGAuthManager authManager = new GOGAuthManager(this);
+            authManager.getUserInfo(authToken, new GOGAuthManager.UserInfoCallback() {
+                @Override
+                public void onSuccess(JSONObject userInfo) {
+                    runOnUiThread(() -> {
+                        try {
+                            // Extrair e salvar informações atualizadas do usuário
+                            String email = userInfo.optString("email", preferencesManager.getUserEmail());
+                            String username = userInfo.optString("username", "");
+                            String userId = userInfo.optString("userId", userInfo.optString("user_id", preferencesManager.getUserId()));
+                            String avatar = userInfo.optString("avatar", preferencesManager.getUserAvatar());
+                            
+                            if (username.trim().isEmpty()) {
+                                username = userInfo.optString("name", "");
+                            }
+                            if (username.trim().isEmpty()) {
+                                username = userInfo.optString("display_name", "");
+                            }
+                            
+                            // Atualizar preferências com novos dados
+                            preferencesManager.saveAuthData(authToken, preferencesManager.getRefreshToken(), 
+                                                           email, username, userId, avatar);
+                            
+                            // Atualizar UI
+                            String displayName = preferencesManager.getDisplayName();
+                            userNameText.setText(displayName);
+                            
+                            Log.d("LibraryActivity", "User info reloaded successfully: " + displayName);
+                            
+                        } catch (Exception e) {
+                            Log.e("LibraryActivity", "Error processing reloaded user info", e);
+                            userNameText.setText("Usuário GOG");
+                        }
+                    });
+                }
+                
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(() -> {
+                        Log.e("LibraryActivity", "Failed to reload user info: " + error);
+                        userNameText.setText("Usuário GOG");
+                    });
+                }
+            });
+        } else {
+            userNameText.setText("Usuário GOG");
+        }
     }
     
     private void updateGameCount(int count) {

@@ -26,9 +26,9 @@ public class GOGLibraryManager {
     
     private static final String TAG = "GOGLibraryManager";
     
-    // URLs da API do GOG - endpoints corretos conforme documentação
-    private static final String USER_GAMES_URL = "https://embed.gog.com/user/data/games";
-    private static final String LIBRARY_FILTERED_URL = "https://embed.gog.com/account/getFilteredProducts?mediaType=game&page=%d";
+    // URLs da API do GOG - usando api.gog.com com Bearer tokens OAuth
+    private static final String USER_GAMES_URL = "https://api.gog.com/user/data/games";
+    private static final String LIBRARY_FILTERED_URL = "https://api.gog.com/account/getFilteredProducts?page=%d&sortBy=title&sortOrder=asc";
     private static final String GAME_DETAILS_URL = "https://api.gog.com/products/%d?expand=downloads";
     private static final String DOWNLOAD_LINK_URL = "https://api.gog.com/products/%d/downlink/download/%s";
     private static final String DOWNLINK_INFO_URL = "https://api.gog.com/products/%d/downlink/%s";
@@ -77,6 +77,7 @@ public class GOGLibraryManager {
         Log.d(TAG, "Loading user library from GOG API - Step 1: Getting user games");
         
         // Primeiro, obter lista de jogos do usuário
+        // Para api.gog.com, usar Authorization Bearer header
         Request request = new Request.Builder()
                 .url(USER_GAMES_URL)
                 .get()
@@ -141,6 +142,7 @@ public class GOGLibraryManager {
         Log.d(TAG, "Loading detailed library from GOG API - Page " + page);
 
         String url = String.format(LIBRARY_FILTERED_URL, page);
+        // Para api.gog.com, usar Authorization Bearer header
         Request request = new Request.Builder()
                 .url(url)
                 .get()
@@ -201,63 +203,62 @@ public class GOGLibraryManager {
     private List<Game> parseLibraryResponse(String responseBody) throws JSONException {
         List<Game> games = new ArrayList<>();
         
+        Log.d(TAG, "Parsing library response: " + responseBody.substring(0, Math.min(500, responseBody.length())));
+        
         JSONObject json = new JSONObject(responseBody);
         
-        // Tentar diferentes formatos de resposta
+        // Para getFilteredProducts, a resposta tem formato: {"products": [...], "page": 1, "totalResults": X}
         JSONArray products = json.optJSONArray("products");
-        if (products == null) {
-            products = json.optJSONArray("owned");
-        }
         
         if (products != null) {
-            Log.d(TAG, "Found " + products.length() + " products in library response");
+            Log.d(TAG, "Found products array with " + products.length() + " items");
             
             for (int i = 0; i < products.length(); i++) {
                 try {
-                    JSONObject productJson;
+                    JSONObject productJson = products.getJSONObject(i);
                     
-                    // Se for apenas um ID (número), criar objeto simples
-                    if (products.get(i) instanceof Number) {
-                        long gameId = products.getLong(i);
-                        productJson = new JSONObject();
-                        productJson.put("id", gameId);
-                        productJson.put("title", "Jogo ID: " + gameId);
-                        productJson.put("slug", "game-" + gameId);
-                    } else {
-                        productJson = products.getJSONObject(i);
-                    }
+                    // Log dos dados do produto para debug
+                    Log.d(TAG, "Processing product " + i + ": " + productJson.toString());
                     
                     Game game = Game.fromJson(productJson);
                     games.add(game);
                     
-                    Log.d(TAG, "Parsed game: " + game.getTitle() + " (ID: " + game.getId() + ")");
+                    Log.d(TAG, "Successfully parsed game: " + game.getTitle() + " (ID: " + game.getId() + ")");
                     
                 } catch (JSONException e) {
-                    Log.w(TAG, "Error parsing game at index " + i, e);
+                    Log.e(TAG, "Error parsing game at index " + i + ": " + e.getMessage(), e);
                     // Continuar com os outros jogos
                 }
             }
         } else {
-            Log.w(TAG, "No products or owned array found in response");
-            
-            // Se não encontrar products, tentar buscar diretamente
+            // Para /user/data/games, a resposta tem formato: {"owned": [id1, id2, id3, ...]}
             JSONArray owned = json.optJSONArray("owned");
             if (owned != null) {
-                Log.d(TAG, "Found owned array with " + owned.length() + " items");
+                Log.d(TAG, "Found owned array with " + owned.length() + " items (IDs only)");
                 
                 for (int i = 0; i < owned.length(); i++) {
                     try {
                         long gameId = owned.getLong(i);
                         
-                        // Criar jogo simples com ID
-                        Game game = new Game(gameId, "Jogo ID: " + gameId);
+                        // Criar jogo simples com ID - o título será carregado depois
+                        Game game = new Game(gameId, "Carregando...");
                         games.add(game);
                         
-                        Log.d(TAG, "Created simple game: " + game.getTitle() + " (ID: " + game.getId() + ")");
+                        Log.d(TAG, "Created game placeholder for ID: " + gameId);
                         
                     } catch (JSONException e) {
-                        Log.w(TAG, "Error parsing owned game at index " + i, e);
+                        Log.w(TAG, "Error parsing owned game ID at index " + i, e);
                     }
+                }
+            } else {
+                Log.w(TAG, "No products or owned array found in response");
+                Log.d(TAG, "Full response: " + responseBody);
+                
+                // Verificar se a resposta é um erro
+                if (json.has("error")) {
+                    String error = json.optString("error", "Erro desconhecido");
+                    Log.e(TAG, "API returned error: " + error);
+                    throw new JSONException("API Error: " + error);
                 }
             }
         }
@@ -341,56 +342,96 @@ public class GOGLibraryManager {
     private List<DownloadLink> parseDownloadLinks(JSONObject gameJson) throws JSONException {
         List<DownloadLink> downloadLinks = new ArrayList<>();
         
-        JSONObject downloads = gameJson.optJSONObject("downloads");
+        // Baseado na documentação oficial do GOG, downloads é um array de arrays
+        JSONArray downloads = gameJson.optJSONArray("downloads");
         if (downloads == null) {
+            Log.w(TAG, "No downloads array found in game details");
             return downloadLinks;
         }
         
-        // Parsear instaladores
-        JSONArray installers = downloads.optJSONArray("installers");
-        if (installers != null) {
-            for (int i = 0; i < installers.length(); i++) {
-                try {
-                    JSONObject installer = installers.getJSONObject(i);
-                    DownloadLink link = DownloadLink.fromJson(installer);
-                    link.setType(DownloadLink.FileType.INSTALLER);
-                    downloadLinks.add(link);
-                } catch (JSONException e) {
-                    Log.w(TAG, "Error parsing installer at index " + i, e);
+        Log.d(TAG, "Found downloads array with " + downloads.length() + " items");
+        
+        // Percorrer cada item no array downloads
+        for (int i = 0; i < downloads.length(); i++) {
+            try {
+                JSONArray languageArray = downloads.getJSONArray(i);
+                if (languageArray.length() >= 2) {
+                    String language = languageArray.getString(0);
+                    JSONObject platforms = languageArray.getJSONObject(1);
+                    
+                    Log.d(TAG, "Processing downloads for language: " + language);
+                    
+                    // Parsear downloads do Windows
+                    JSONArray windowsDownloads = platforms.optJSONArray("windows");
+                    if (windowsDownloads != null) {
+                        for (int j = 0; j < windowsDownloads.length(); j++) {
+                            try {
+                                JSONObject downloadItem = windowsDownloads.getJSONObject(j);
+                                DownloadLink link = DownloadLink.fromJson(downloadItem);
+                                link.setType(DownloadLink.FileType.INSTALLER);
+                                downloadLinks.add(link);
+                                Log.d(TAG, "Added installer: " + downloadItem.optString("name"));
+                            } catch (JSONException e) {
+                                Log.w(TAG, "Error parsing Windows download at index " + j, e);
+                            }
+                        }
+                    }
+                    
+                    // Parsear downloads do Mac se existir
+                    JSONArray macDownloads = platforms.optJSONArray("mac");
+                    if (macDownloads != null) {
+                        for (int j = 0; j < macDownloads.length(); j++) {
+                            try {
+                                JSONObject downloadItem = macDownloads.getJSONObject(j);
+                                DownloadLink link = DownloadLink.fromJson(downloadItem);
+                                link.setType(DownloadLink.FileType.INSTALLER);
+                                downloadLinks.add(link);
+                                Log.d(TAG, "Added Mac installer: " + downloadItem.optString("name"));
+                            } catch (JSONException e) {
+                                Log.w(TAG, "Error parsing Mac download at index " + j, e);
+                            }
+                        }
+                    }
+                    
+                    // Parsear downloads do Linux se existir
+                    JSONArray linuxDownloads = platforms.optJSONArray("linux");
+                    if (linuxDownloads != null) {
+                        for (int j = 0; j < linuxDownloads.length(); j++) {
+                            try {
+                                JSONObject downloadItem = linuxDownloads.getJSONObject(j);
+                                DownloadLink link = DownloadLink.fromJson(downloadItem);
+                                link.setType(DownloadLink.FileType.INSTALLER);
+                                downloadLinks.add(link);
+                                Log.d(TAG, "Added Linux installer: " + downloadItem.optString("name"));
+                            } catch (JSONException e) {
+                                Log.w(TAG, "Error parsing Linux download at index " + j, e);
+                            }
+                        }
+                    }
                 }
+            } catch (JSONException e) {
+                Log.w(TAG, "Error parsing download language group at index " + i, e);
             }
         }
         
-        // Parsear patches
-        JSONArray patches = downloads.optJSONArray("patches");
-        if (patches != null) {
-            for (int i = 0; i < patches.length(); i++) {
-                try {
-                    JSONObject patch = patches.getJSONObject(i);
-                    DownloadLink link = DownloadLink.fromJson(patch);
-                    link.setType(DownloadLink.FileType.PATCH);
-                    downloadLinks.add(link);
-                } catch (JSONException e) {
-                    Log.w(TAG, "Error parsing patch at index " + i, e);
-                }
-            }
-        }
-        
-        // Parsear extras
-        JSONArray extras = downloads.optJSONArray("bonus_content");
+        // Parsear extras (bonus content)
+        JSONArray extras = gameJson.optJSONArray("extras");
         if (extras != null) {
+            Log.d(TAG, "Found extras array with " + extras.length() + " items");
             for (int i = 0; i < extras.length(); i++) {
                 try {
                     JSONObject extra = extras.getJSONObject(i);
                     DownloadLink link = DownloadLink.fromJson(extra);
                     link.setType(DownloadLink.FileType.EXTRA);
                     downloadLinks.add(link);
+                    Log.d(TAG, "Added extra: " + extra.optString("name"));
                 } catch (JSONException e) {
                     Log.w(TAG, "Error parsing extra at index " + i, e);
                 }
             }
         }
         
+        Log.d(TAG, "Total download links parsed: " + downloadLinks.size());
         return downloadLinks;
     }
     
