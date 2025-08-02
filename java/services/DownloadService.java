@@ -236,7 +236,7 @@ public class DownloadService extends Service {
     
     private void startFileDownload(Game game, DownloadLink downloadLink) {
         // Obter URL de download real
-        libraryManager.getDownloadLink(game.getId(), downloadLink.getId(), "installer", 
+        libraryManager.getDownloadLink(game.getId(), downloadLink.getId(), "download",
                 new GOGLibraryManager.DownloadLinkCallback() {
             @Override
             public void onSuccess(String downloadUrl) {

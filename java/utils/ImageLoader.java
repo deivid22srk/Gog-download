@@ -107,6 +107,10 @@ public class ImageLoader {
         try {
             Log.d(TAG, "=== STARTING BITMAP DOWNLOAD ===");
             Log.d(TAG, "Target URL: " + imageUrl);
+
+            if (imageUrl.startsWith("//")) {
+                imageUrl = "https:" + imageUrl;
+            }
             
             URL url = new URL(imageUrl);
             connection = (HttpURLConnection) url.openConnection();
