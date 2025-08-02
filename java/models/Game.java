@@ -70,13 +70,9 @@ public class Game implements Serializable {
                 game.coverImage = images.optString("icon", "");
             }
             game.backgroundImage = images.optString("background", "");
-        } else {
-            // Tentar campo image direto (formato getFilteredProducts)
-            String directImage = json.optString("image", "");
-            if (!directImage.isEmpty()) {
-                game.coverImage = directImage;
-            }
         }
+        // REMOVIDO: fallback para campo "image" direto pois URLs antigas retornam 404
+        // As imagens corretas vêm dos detalhes do jogo via loadGameDetails()
         
         // Garantir que URLs de imagem tenham protocolo
         if (game.coverImage != null && !game.coverImage.isEmpty()) {

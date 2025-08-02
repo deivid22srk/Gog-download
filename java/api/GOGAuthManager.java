@@ -171,8 +171,14 @@ public class GOGAuthManager {
                             String accessToken = jsonResponse.getString("access_token");
                             String refreshToken = jsonResponse.optString("refresh_token", "");
                             long expiresIn = jsonResponse.optLong("expires_in", 3600);
+                            String scope = jsonResponse.optString("scope", "");
                             
                             Log.d(TAG, "Token exchange successful");
+                            Log.d(TAG, "Token scope received: '" + scope + "'");
+                            if (scope.isEmpty()) {
+                                Log.w(TAG, "WARNING: Token has empty scope - may not have sufficient permissions");
+                            }
+                            
                             callback.onSuccess(accessToken, refreshToken, expiresIn);
                             
                         } catch (JSONException e) {

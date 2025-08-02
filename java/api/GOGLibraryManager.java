@@ -80,12 +80,14 @@ public class GOGLibraryManager {
         
         Log.d(TAG, "Loading user library from GOG API");
         
-        // Tentar api.gog.com primeiro
-        tryApiGogLibrary(authToken, callback);
+        // Usar embed.gog.com diretamente (como o minigalaxy faz)
+        tryEmbedGogLibrary(authToken, callback);
     }
     
     /**
      * Tenta carregar biblioteca do api.gog.com
+     * NOTA: Mantido como fallback, mas embed.gog.com é preferido
+     * pois api.gog.com pode retornar 403 para aplicações de terceiros
      */
     private void tryApiGogLibrary(String authToken, LibraryCallback callback) {
         Log.d(TAG, "Trying api.gog.com for user library");
@@ -117,7 +119,12 @@ public class GOGLibraryManager {
                         try {
                             List<Game> games = parseApiGogResponse(responseBody);
                             Log.d(TAG, "Successfully loaded " + games.size() + " games from api.gog.com");
+                            
+                            // Retornar jogos imediatamente para mostrar a lista
                             callback.onSuccess(games);
+                            
+                            // Carregar tamanhos dos jogos de forma assíncrona
+                            loadGameSizesAsync(games);
                             
                         } catch (JSONException e) {
                             Log.e(TAG, "Error parsing api.gog.com response, trying embed.gog.com", e);
@@ -142,8 +149,6 @@ public class GOGLibraryManager {
                 .url(EMBED_USER_GAMES_URL)
                 .get()
                 .addHeader("Authorization", "Bearer " + authToken)
-                .addHeader("User-Agent", "GOGDownloaderApp/1.0")
-                .addHeader("Accept", "application/json")
                 .build();
         
         httpClient.newCall(request).enqueue(new Callback() {
@@ -283,7 +288,12 @@ public class GOGLibraryManager {
                                 loadDetailedLibrary(authToken, page + 1, accumulatedGames, callback);
                             } else {
                                 Log.d(TAG, "Library loaded successfully: " + accumulatedGames.size() + " games");
+                                
+                                // Retornar jogos imediatamente para mostrar a lista
                                 callback.onSuccess(accumulatedGames);
+                                
+                                // Carregar tamanhos dos jogos de forma assíncrona
+                                loadGameSizesAsync(accumulatedGames);
                             }
 
                         } catch (JSONException e) {
@@ -292,7 +302,12 @@ public class GOGLibraryManager {
                             // Se houve erro mas já temos alguns jogos acumulados, retornar eles
                             if (!accumulatedGames.isEmpty()) {
                                 Log.w(TAG, "Returning " + accumulatedGames.size() + " games despite parsing error");
+                                
+                                // Retornar jogos imediatamente
                                 callback.onSuccess(accumulatedGames);
+                                
+                                // Carregar tamanhos dos jogos de forma assíncrona
+                                loadGameSizesAsync(accumulatedGames);
                             } else {
                                 callback.onError("Erro ao processar biblioteca de jogos");
                             }
@@ -459,85 +474,101 @@ public class GOGLibraryManager {
     private List<DownloadLink> parseDownloadLinks(JSONObject gameJson) throws JSONException {
         List<DownloadLink> downloadLinks = new ArrayList<>();
         
-        // Baseado na documentação oficial do GOG, downloads é um array de arrays
-        JSONArray downloads = gameJson.optJSONArray("downloads");
+        // Estrutura atual da API GOG (2025)
+        JSONObject downloads = gameJson.optJSONObject("downloads");
         if (downloads == null) {
-            Log.w(TAG, "No downloads array found in game details");
+            Log.w(TAG, "No downloads object found in game details");
             return downloadLinks;
         }
         
-        Log.d(TAG, "Found downloads array with " + downloads.length() + " items");
+        Log.d(TAG, "Found downloads object, parsing installers...");
         
-        // Percorrer cada item no array downloads
-        for (int i = 0; i < downloads.length(); i++) {
-            try {
-                JSONArray languageArray = downloads.getJSONArray(i);
-                if (languageArray.length() >= 2) {
-                    String language = languageArray.getString(0);
-                    JSONObject platforms = languageArray.getJSONObject(1);
+        // Parsear installers
+        JSONArray installers = downloads.optJSONArray("installers");
+        if (installers != null) {
+            Log.d(TAG, "Found installers array with " + installers.length() + " items");
+            for (int i = 0; i < installers.length(); i++) {
+                try {
+                    JSONObject installer = installers.getJSONObject(i);
                     
-                    Log.d(TAG, "Processing downloads for language: " + language);
-                    
-                    // Parsear downloads do Windows
-                    JSONArray windowsDownloads = platforms.optJSONArray("windows");
-                    if (windowsDownloads != null) {
-                        for (int j = 0; j < windowsDownloads.length(); j++) {
+                    // Parsear arquivos do installer
+                    JSONArray files = installer.optJSONArray("files");
+                    if (files != null) {
+                        for (int j = 0; j < files.length(); j++) {
                             try {
-                                JSONObject downloadItem = windowsDownloads.getJSONObject(j);
-                                DownloadLink link = DownloadLink.fromJson(downloadItem);
+                                JSONObject file = files.getJSONObject(j);
+                                DownloadLink link = DownloadLink.fromJson(file);
+                                
+                                // Definir dados do installer
+                                link.setName(installer.optString("name", "Unknown"));
                                 link.setType(DownloadLink.FileType.INSTALLER);
+                                
+                                // Definir plataforma baseado no campo "os"
+                                String os = installer.optString("os", "windows").toLowerCase();
+                                switch (os) {
+                                    case "mac":
+                                        link.setPlatform(DownloadLink.Platform.MAC);
+                                        break;
+                                    case "linux":
+                                        link.setPlatform(DownloadLink.Platform.LINUX);
+                                        break;
+                                    default:
+                                        link.setPlatform(DownloadLink.Platform.WINDOWS);
+                                        break;
+                                }
+                                
+                                // Definir idioma
+                                link.setLanguage(installer.optString("language", "en"));
+                                
                                 downloadLinks.add(link);
-                                Log.d(TAG, "Added installer: " + downloadItem.optString("name"));
+                                Log.d(TAG, "Added installer file: " + file.optString("id") + 
+                                          " (" + link.getFormattedSize() + ") - " + link.getUrl());
                             } catch (JSONException e) {
-                                Log.w(TAG, "Error parsing Windows download at index " + j, e);
+                                Log.w(TAG, "Error parsing installer file at index " + j, e);
                             }
                         }
                     }
-                    
-                    // Parsear downloads do Mac se existir
-                    JSONArray macDownloads = platforms.optJSONArray("mac");
-                    if (macDownloads != null) {
-                        for (int j = 0; j < macDownloads.length(); j++) {
-                            try {
-                                JSONObject downloadItem = macDownloads.getJSONObject(j);
-                                DownloadLink link = DownloadLink.fromJson(downloadItem);
-                                link.setType(DownloadLink.FileType.INSTALLER);
-                                downloadLinks.add(link);
-                                Log.d(TAG, "Added Mac installer: " + downloadItem.optString("name"));
-                            } catch (JSONException e) {
-                                Log.w(TAG, "Error parsing Mac download at index " + j, e);
-                            }
-                        }
-                    }
-                    
-                    // Parsear downloads do Linux se existir
-                    JSONArray linuxDownloads = platforms.optJSONArray("linux");
-                    if (linuxDownloads != null) {
-                        for (int j = 0; j < linuxDownloads.length(); j++) {
-                            try {
-                                JSONObject downloadItem = linuxDownloads.getJSONObject(j);
-                                DownloadLink link = DownloadLink.fromJson(downloadItem);
-                                link.setType(DownloadLink.FileType.INSTALLER);
-                                downloadLinks.add(link);
-                                Log.d(TAG, "Added Linux installer: " + downloadItem.optString("name"));
-                            } catch (JSONException e) {
-                                Log.w(TAG, "Error parsing Linux download at index " + j, e);
-                            }
-                        }
-                    }
+                } catch (JSONException e) {
+                    Log.w(TAG, "Error parsing installer at index " + i, e);
                 }
-            } catch (JSONException e) {
-                Log.w(TAG, "Error parsing download language group at index " + i, e);
             }
         }
         
-        // Parsear extras (bonus content)
-        JSONArray extras = gameJson.optJSONArray("extras");
-        if (extras != null) {
-            Log.d(TAG, "Found extras array with " + extras.length() + " items");
-            for (int i = 0; i < extras.length(); i++) {
+        // Parsear patches
+        JSONArray patches = downloads.optJSONArray("patches");
+        if (patches != null) {
+            Log.d(TAG, "Found patches array with " + patches.length() + " items");
+            for (int i = 0; i < patches.length(); i++) {
                 try {
-                    JSONObject extra = extras.getJSONObject(i);
+                    JSONObject patch = patches.getJSONObject(i);
+                    JSONArray files = patch.optJSONArray("files");
+                    if (files != null) {
+                        for (int j = 0; j < files.length(); j++) {
+                            try {
+                                JSONObject file = files.getJSONObject(j);
+                                DownloadLink link = DownloadLink.fromJson(file);
+                                link.setName(patch.optString("name", "Patch"));
+                                link.setType(DownloadLink.FileType.PATCH);
+                                downloadLinks.add(link);
+                                Log.d(TAG, "Added patch: " + file.optString("id"));
+                            } catch (JSONException e) {
+                                Log.w(TAG, "Error parsing patch file at index " + j, e);
+                            }
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.w(TAG, "Error parsing patch at index " + i, e);
+                }
+            }
+        }
+        
+        // Parsear bonus content (se existir)
+        JSONArray bonusContent = downloads.optJSONArray("bonus_content");
+        if (bonusContent != null) {
+            Log.d(TAG, "Found bonus content array with " + bonusContent.length() + " items");
+            for (int i = 0; i < bonusContent.length(); i++) {
+                try {
+                    JSONObject extra = bonusContent.getJSONObject(i);
                     DownloadLink link = DownloadLink.fromJson(extra);
                     link.setType(DownloadLink.FileType.EXTRA);
                     downloadLinks.add(link);
@@ -624,5 +655,60 @@ public class GOGLibraryManager {
                 }
             }
         });
+    }
+    
+    /**
+     * Carrega tamanhos dos jogos de forma assíncrona
+     * Atualiza os jogos progressivamente conforme os tamanhos são obtidos
+     */
+    private void loadGameSizesAsync(List<Game> games) {
+        if (games == null || games.isEmpty()) {
+            Log.d(TAG, "No games to load sizes for");
+            return;
+        }
+        
+        Log.d(TAG, "Starting async size loading for " + games.size() + " games");
+        
+        // Carregar tamanhos em background thread para não bloquear UI
+        new Thread(() -> {
+            for (Game game : games) {
+                if (game.getTotalSize() > 0) {
+                    // Já tem tamanho, pular
+                    continue;
+                }
+                
+                try {
+                    // Carregar detalhes do jogo para obter tamanho
+                    loadGameDetails(game.getId(), new GameDetailsCallback() {
+                        @Override
+                        public void onSuccess(Game detailedGame, List<DownloadLink> downloadLinks) {
+                            if (detailedGame.getTotalSize() > 0) {
+                                // Atualizar tamanho do jogo original
+                                game.setTotalSize(detailedGame.getTotalSize());
+                                Log.d(TAG, "Updated size for game '" + game.getTitle() + "': " + game.getFormattedSize());
+                                
+                                // TODO: Notificar UI para atualizar (implementar observer pattern se necessário)
+                            }
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.w(TAG, "Failed to load size for game '" + game.getTitle() + "': " + error);
+                        }
+                    });
+                    
+                    // Delay pequeno entre requisições para não sobrecarregar API
+                    Thread.sleep(500);
+                    
+                } catch (InterruptedException e) {
+                    Log.w(TAG, "Size loading interrupted", e);
+                    break;
+                } catch (Exception e) {
+                    Log.e(TAG, "Error loading size for game '" + game.getTitle() + "'", e);
+                }
+            }
+            
+            Log.d(TAG, "Finished async size loading");
+        }).start();
     }
 }

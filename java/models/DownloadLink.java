@@ -48,7 +48,7 @@ public class DownloadLink {
         
         link.id = json.optString("id", "");
         link.name = json.optString("name", "");
-        link.url = json.optString("manualUrl", "");
+        link.url = json.optString("downlink", ""); // Corrigido: API retorna "downlink" não "manualUrl"
         link.size = json.optLong("size", 0);
         link.checksum = json.optString("checksum", "");
         link.version = json.optString("version", "");
