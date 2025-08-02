@@ -26,9 +26,9 @@ public class GOGLibraryManager {
     
     private static final String TAG = "GOGLibraryManager";
     
-    // URLs da API do GOG - usando api.gog.com com Bearer tokens OAuth
-    private static final String USER_GAMES_URL = "https://api.gog.com/user/data/games";
-    private static final String LIBRARY_FILTERED_URL = "https://api.gog.com/account/getFilteredProducts?page=%d&sortBy=title&sortOrder=asc";
+    // URLs da API do GOG - usando embed.gog.com para biblioteca, api.gog.com para downloads
+    private static final String USER_GAMES_URL = "https://embed.gog.com/user/data/games";
+    private static final String LIBRARY_FILTERED_URL = "https://embed.gog.com/account/getFilteredProducts?mediaType=1&page=%d";
     private static final String GAME_DETAILS_URL = "https://api.gog.com/products/%d?expand=downloads";
     private static final String DOWNLOAD_LINK_URL = "https://api.gog.com/products/%d/downlink/download/%s";
     private static final String DOWNLINK_INFO_URL = "https://api.gog.com/products/%d/downlink/%s";
@@ -77,7 +77,7 @@ public class GOGLibraryManager {
         Log.d(TAG, "Loading user library from GOG API - Step 1: Getting user games");
         
         // Primeiro, obter lista de jogos do usuário
-        // Para api.gog.com, usar Authorization Bearer header
+        // Para embed.gog.com, usar Authorization Bearer header
         Request request = new Request.Builder()
                 .url(USER_GAMES_URL)
                 .get()
@@ -142,7 +142,7 @@ public class GOGLibraryManager {
         Log.d(TAG, "Loading detailed library from GOG API - Page " + page);
 
         String url = String.format(LIBRARY_FILTERED_URL, page);
-        // Para api.gog.com, usar Authorization Bearer header
+        // Para embed.gog.com, usar Authorization Bearer header
         Request request = new Request.Builder()
                 .url(url)
                 .get()

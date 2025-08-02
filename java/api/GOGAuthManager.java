@@ -35,7 +35,8 @@ public class GOGAuthManager {
     
     // URLs da API do GOG - endpoints reais
     private static final String TOKEN_URL = "https://auth.gog.com/token";
-    private static final String USER_INFO_URL = "https://api.gog.com/user/data/games";
+    private static final String USER_DATA_URL = "https://embed.gog.com/userData.json";
+    private static final String USER_INFO_URL = "https://embed.gog.com/user/data/games";
     private static final String REFRESH_TOKEN_URL = "https://auth.gog.com/token";
     
     // Client ID e configurações OAuth do GOG
@@ -242,7 +243,7 @@ public class GOGAuthManager {
             return;
         }
         
-        // Para api.gog.com, usar Authorization Bearer header
+        // Para embed.gog.com, usar Authorization Bearer header
         Request request = new Request.Builder()
                 .url(USER_INFO_URL)
                 .get()
@@ -293,6 +294,66 @@ public class GOGAuthManager {
                             callback.onError("Token expirado ou inválido");
                         } else {
                             callback.onError("Erro ao obter informações do usuário (" + response.code() + ")");
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    /**
+     * Obtém informações completas do usuário (nome, email, avatar)
+     * @param authToken Token de acesso
+     * @param callback Callback para resultado
+     */
+    public void getUserData(String authToken, UserInfoCallback callback) {
+        Log.d(TAG, "Getting user data from userData.json");
+        
+        if (authToken == null || authToken.trim().isEmpty()) {
+            callback.onError("Token de acesso é obrigatório");
+            return;
+        }
+        
+        Request request = new Request.Builder()
+                .url(USER_DATA_URL)
+                .get()
+                .addHeader("Authorization", "Bearer " + authToken)
+                .addHeader("User-Agent", "GOGDownloaderApp/1.0")
+                .addHeader("Accept", "application/json")
+                .build();
+        
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "User data network error", e);
+                callback.onError("Erro de conexão: " + e.getMessage());
+            }
+            
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    String responseString = responseBody != null ? responseBody.string() : "";
+                    
+                    Log.d(TAG, "User data response code: " + response.code());
+                    Log.d(TAG, "User data response: " + responseString);
+                    
+                    if (response.isSuccessful() && responseBody != null) {
+                        try {
+                            JSONObject userData = new JSONObject(responseString);
+                            Log.d(TAG, "User data loaded successfully");
+                            callback.onSuccess(userData);
+                            
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error parsing user data response", e);
+                            callback.onError("Erro ao processar dados do usuário");
+                        }
+                    } else {
+                        Log.e(TAG, "User data failed with code: " + response.code() + " body: " + responseString);
+                        
+                        if (response.code() == 401) {
+                            callback.onError("Token expirado ou inválido");
+                        } else {
+                            callback.onError("Erro ao obter dados do usuário (" + response.code() + ")");
                         }
                     }
                 }

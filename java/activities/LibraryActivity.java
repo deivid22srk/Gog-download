@@ -251,36 +251,48 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         String authToken = preferencesManager.getAuthToken();
         if (authToken != null && !authToken.isEmpty()) {
             GOGAuthManager authManager = new GOGAuthManager(this);
-            authManager.getUserInfo(authToken, new GOGAuthManager.UserInfoCallback() {
+            
+            // Usar o novo método getUserData para obter informações completas do usuário
+            authManager.getUserData(authToken, new GOGAuthManager.UserInfoCallback() {
                 @Override
-                public void onSuccess(JSONObject userInfo) {
+                public void onSuccess(JSONObject userData) {
                     runOnUiThread(() -> {
                         try {
-                            // Extrair e salvar informações atualizadas do usuário
-                            String email = userInfo.optString("email", preferencesManager.getUserEmail());
-                            String username = userInfo.optString("username", "");
-                            String userId = userInfo.optString("userId", userInfo.optString("user_id", preferencesManager.getUserId()));
-                            String avatar = userInfo.optString("avatar", preferencesManager.getUserAvatar());
+                            // Extrair informações do userData.json
+                            String email = userData.optString("email", "");
+                            String username = userData.optString("username", "");
+                            String userId = userData.optString("userId", userData.optString("user_id", ""));
+                            String avatar = userData.optString("avatar", "");
+                            String firstName = userData.optString("first_name", "");
+                            String lastName = userData.optString("last_name", "");
                             
-                            if (username.trim().isEmpty()) {
-                                username = userInfo.optString("name", "");
+                            // Criar nome de exibição
+                            String displayName = "";
+                            if (!firstName.isEmpty() || !lastName.isEmpty()) {
+                                displayName = (firstName + " " + lastName).trim();
                             }
-                            if (username.trim().isEmpty()) {
-                                username = userInfo.optString("display_name", "");
+                            if (displayName.isEmpty() && !username.isEmpty()) {
+                                displayName = username;
+                            }
+                            if (displayName.isEmpty() && !email.isEmpty()) {
+                                displayName = email.split("@")[0]; // Usar parte antes do @ do email
+                            }
+                            if (displayName.isEmpty()) {
+                                displayName = "Usuário GOG";
                             }
                             
-                            // Atualizar preferências com novos dados
+                            // Salvar informações atualizadas
                             preferencesManager.saveAuthData(authToken, preferencesManager.getRefreshToken(), 
-                                                           email, username, userId, avatar);
+                                                           email, displayName, userId, avatar);
                             
                             // Atualizar UI
-                            String displayName = preferencesManager.getDisplayName();
                             userNameText.setText(displayName);
                             
-                            Log.d("LibraryActivity", "User info reloaded successfully: " + displayName);
+                            Log.d("LibraryActivity", "User data reloaded successfully: " + displayName);
+                            Log.d("LibraryActivity", "Email: " + email + ", Username: " + username + ", Avatar: " + avatar);
                             
                         } catch (Exception e) {
-                            Log.e("LibraryActivity", "Error processing reloaded user info", e);
+                            Log.e("LibraryActivity", "Error processing user data", e);
                             userNameText.setText("Usuário GOG");
                         }
                     });
@@ -289,7 +301,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
                 @Override
                 public void onError(String error) {
                     runOnUiThread(() -> {
-                        Log.e("LibraryActivity", "Failed to reload user info: " + error);
+                        Log.e("LibraryActivity", "Failed to reload user data: " + error);
                         userNameText.setText("Usuário GOG");
                     });
                 }

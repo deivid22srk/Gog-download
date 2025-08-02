@@ -72,11 +72,24 @@ public class Game implements Serializable {
             // Tentar campo image direto (formato getFilteredProducts)
             String directImage = json.optString("image", "");
             if (!directImage.isEmpty()) {
-                // Adicionar protocolo se necessário
-                if (directImage.startsWith("//")) {
-                    directImage = "https:" + directImage;
-                }
                 game.coverImage = directImage;
+            }
+        }
+        
+        // Garantir que URLs de imagem tenham protocolo
+        if (game.coverImage != null && !game.coverImage.isEmpty()) {
+            if (game.coverImage.startsWith("//")) {
+                game.coverImage = "https:" + game.coverImage;
+            } else if (!game.coverImage.startsWith("http")) {
+                game.coverImage = "https://" + game.coverImage;
+            }
+        }
+        
+        if (game.backgroundImage != null && !game.backgroundImage.isEmpty()) {
+            if (game.backgroundImage.startsWith("//")) {
+                game.backgroundImage = "https:" + game.backgroundImage;
+            } else if (!game.backgroundImage.startsWith("http")) {
+                game.backgroundImage = "https://" + game.backgroundImage;
             }
         }
         
