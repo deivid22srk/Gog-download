@@ -108,8 +108,12 @@ public class GOGLibraryManager {
                             JSONArray ownedGames = json.optJSONArray("owned");
                             
                             if (ownedGames != null && ownedGames.length() > 0) {
-                                Log.d(TAG, "Found " + ownedGames.length() + " owned games, getting detailed info");
-                                loadDetailedLibrary(authToken, callback);
+                                List<Long> gameIds = new ArrayList<>();
+                                for (int i = 0; i < ownedGames.length(); i++) {
+                                    gameIds.add(ownedGames.getLong(i));
+                                }
+                                Log.d(TAG, "Found " + gameIds.size() + " owned games, getting detailed info");
+                                loadDetailedLibrary(authToken, gameIds, callback);
                             } else {
                                 Log.d(TAG, "No owned games found");
                                 callback.onSuccess(new ArrayList<>());
@@ -138,15 +142,16 @@ public class GOGLibraryManager {
      * @param authToken Token de autenticação
      * @param callback Callback para resultado
      */
-    private void loadDetailedLibrary(String authToken, LibraryCallback callback) {
+    private void loadDetailedLibrary(String authToken, List<Long> gameIds, LibraryCallback callback) {
         Log.d(TAG, "Loading detailed library from GOG API - Step 2: Getting filtered products");
         
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("mediaType", "game");
-            jsonBody.put("page", 1);
+            jsonBody.put("ids", new JSONArray(gameIds));
         } catch (JSONException e) {
-            // Should not happen
+            callback.onError("Failed to create request body");
+            return;
         }
         RequestBody body = RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
 
