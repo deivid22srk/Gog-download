@@ -20,6 +20,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class GOGLibraryManager {
@@ -140,9 +141,18 @@ public class GOGLibraryManager {
     private void loadDetailedLibrary(String authToken, LibraryCallback callback) {
         Log.d(TAG, "Loading detailed library from GOG API - Step 2: Getting filtered products");
         
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("mediaType", "game");
+            jsonBody.put("page", 1);
+        } catch (JSONException e) {
+            // Should not happen
+        }
+        RequestBody body = RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
+
         Request request = new Request.Builder()
                 .url(LIBRARY_FILTERED_URL)
-                .get()
+                .post(body)
                 .addHeader("Authorization", "Bearer " + authToken)
                 .addHeader("User-Agent", "GOGDownloaderApp/1.0")
                 .addHeader("Accept", "application/json")
