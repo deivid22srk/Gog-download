@@ -3,21 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gog_background">
+    android:background="?attr/colorSurface">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:layout_height="wrap_content">
 
-        <androidx.appcompat.widget.Toolbar
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/gog_purple"
-            app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="@string/library_title"
-            app:titleTextColor="@color/white" />
+            app:titleTextColor="?attr/colorOnSurface"
+            android:background="?attr/colorSurface"
+            app:popupTheme="?attr/actionBarPopupTheme" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -29,11 +28,10 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <!-- User Info Card -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/userInfoCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/GOGCard"
             android:layout_margin="8dp">
 
             <LinearLayout
@@ -57,44 +55,39 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/userNameText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Nome do Usuário"
-                        android:textColor="@color/gog_text_primary"
-                        android:textSize="18sp"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
                         android:textStyle="bold" />
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/gameCountText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0 jogos na biblioteca"
-                        android:textColor="@color/gog_text_secondary"
-                        android:textSize="14sp" />
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                 </LinearLayout>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/refreshButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/refresh"
-                    android:textSize="12sp"
-                    android:background="@color/gog_light_purple"
-                    android:textColor="@color/white"
-                    android:padding="8dp" />
+                    style="@style/Widget.Material3.Button.TonalButton" />
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Search Bar -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/GOGCard"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp">
@@ -103,12 +96,11 @@
                 android:id="@+id/searchView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/gog_card_background"
                 app:queryHint="Buscar jogos..."
                 app:iconifiedByDefault="false"
                 app:queryBackground="@android:color/transparent" />
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Games List -->
         <FrameLayout
@@ -136,15 +128,15 @@
                 <ProgressBar
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:indeterminateTint="@color/gog_purple" />
+                    android:indeterminateTint="?attr/colorPrimary" />
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/loading_library"
-                    android:textColor="@color/gog_text_secondary"
-                    android:textSize="16sp" />
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
             </LinearLayout>
 
@@ -165,21 +157,21 @@
                     android:alpha="0.5"
                     android:contentDescription="Empty Library" />
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/no_games"
-                    android:textColor="@color/gog_text_secondary"
-                    android:textSize="18sp"
+                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textAlignment="center" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/retryButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/retry"
-                    style="@style/GOGButton" />
+                    style="@style/Widget.Material3.Button.FilledButton" />
 
             </LinearLayout>
 
@@ -196,7 +188,7 @@
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_menu_preferences"
         android:contentDescription="@string/settings"
-        app:backgroundTint="@color/gog_purple"
-        app:tint="@color/white" />
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="?attr/colorOnPrimary" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

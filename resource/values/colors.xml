@@ -7,24 +7,4 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    
-    <!-- GOG Brand Colors -->
-    <color name="gog_purple">#663399</color>
-    <color name="gog_dark_purple">#4A2570</color>
-    <color name="gog_light_purple">#8B5FBF</color>
-    <color name="gog_background">#1E1E1E</color>
-    <color name="gog_card_background">#2D2D30</color>
-    <color name="gog_text_primary">#FFFFFF</color>
-    <color name="gog_text_secondary">#CCCCCC</color>
-    
-    <!-- Alias Colors -->
-    <color name="purple_primary">@color/gog_purple</color>
-    <color name="red_error">#F44336</color>
-    <color name="gray_text">@color/gog_text_secondary</color>
-    
-    <!-- Status Colors -->
-    <color name="download_progress">#4CAF50</color>
-    <color name="download_pending">#FF9800</color>
-    <color name="download_error">#F44336</color>
-    <color name="download_complete">#2196F3</color>
 </resources>

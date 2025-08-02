@@ -40,7 +40,7 @@ public class PreferencesManager {
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_USER_AVATAR, avatarUrl);
         editor.putLong(KEY_LOGIN_TIME, System.currentTimeMillis());
-        editor.commit();
+        editor.apply();
     }
     
     public String getAuthToken() {
@@ -98,7 +98,7 @@ public class PreferencesManager {
         editor.remove(KEY_USER_ID);
         editor.remove(KEY_USER_AVATAR);
         editor.remove(KEY_LOGIN_TIME);
-        editor.commit();
+        editor.apply();
     }
     
     public boolean isLoggedIn() {
@@ -127,7 +127,7 @@ public class PreferencesManager {
     // Métodos de download
     public void setDownloadPath(String path) {
         editor.putString(KEY_DOWNLOAD_PATH, path);
-        editor.commit();
+        editor.apply();
     }
     
     public String getDownloadPath() {
@@ -158,13 +158,13 @@ public class PreferencesManager {
     
     public void setFirstRunCompleted() {
         editor.putBoolean(KEY_FIRST_RUN, false);
-        editor.commit();
+        editor.apply();
     }
     
     // Limpar todas as preferências
     public void clearAll() {
         editor.clear();
-        editor.commit();
+        editor.apply();
     }
     
     // Verificar se um caminho é válido
