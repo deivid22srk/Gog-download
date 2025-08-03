@@ -65,7 +65,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     private Button refreshButton;
     private Button retryButton;
     private TextInputEditText searchEditText;
-    private FloatingActionButton settingsFab;
+    private FloatingActionButton installFab;
     
     private GOGLibraryManager libraryManager;
     private PreferencesManager preferencesManager;
@@ -79,6 +79,9 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     private DownloadLink pendingDownloadLink; // Para compatibilidade com código antigo
     private List<DownloadLink> pendingSelectedLinks; // Para múltiplos downloads
     private BroadcastReceiver downloadProgressReceiver;
+    private BroadcastReceiver installProgressReceiver;
+
+    private ActivityResultLauncher<Intent> installerFolderPickerLauncher;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +103,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         setupToolbar();
         setupRecyclerView();
         setupClickListeners();
+        setupInstallFolderPickerLauncher();
         checkPermissions();
         loadLibrary();
         
@@ -233,7 +237,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     private void setupClickListeners() {
         refreshButton.setOnClickListener(v -> refreshLibrary());
         retryButton.setOnClickListener(v -> loadLibrary());
-        settingsFab.setOnClickListener(v -> openSettings());
+        installFab.setOnClickListener(v -> openInstallerFolderPicker());
         
         // Configurar SearchEditText
         searchEditText.addTextChangedListener(new TextWatcher() {
@@ -920,10 +924,73 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     }
     
     @Override
+    private void setupInstallFolderPickerLauncher() {
+        installerFolderPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Uri uri = result.getData().getData();
+                        if (uri != null) {
+                            showInstallProgressDialog();
+                            Intent intent = new Intent(this, InstallationService.class);
+                            intent.setAction(InstallationService.ACTION_INSTALL);
+                            intent.putExtra(InstallationService.EXTRA_INSTALLER_FOLDER_URI, uri);
+                            startService(intent);
+                        }
+                    }
+                });
+    }
+
+    private void openInstallerFolderPicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        installerFolderPickerLauncher.launch(intent);
+    }
+
+    private void showInstallProgressDialog() {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
+        builder.setTitle("Instalando Jogo");
+        View view = getLayoutInflater().inflate(R.layout.dialog_install_progress, null);
+        builder.setView(view);
+        builder.setCancelable(false);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        ProgressBar progressBar = view.findViewById(R.id.installProgressBar);
+        TextView progressText = view.findViewById(R.id.installProgressText);
+
+        installProgressReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String error = intent.getStringExtra(InstallationService.EXTRA_INSTALL_ERROR);
+                if (error != null) {
+                    dialog.dismiss();
+                    Toast.makeText(LibraryActivity.this, "Erro na instalação: " + error, Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                int progress = intent.getIntExtra(InstallationService.EXTRA_INSTALL_PROGRESS, 0);
+                String message = intent.getStringExtra(InstallationService.EXTRA_INSTALL_MESSAGE);
+
+                progressBar.setProgress(progress);
+                progressText.setText(message);
+
+                if (progress >= 100) {
+                    dialog.dismiss();
+                    Toast.makeText(LibraryActivity.this, "Instalação concluída!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(installProgressReceiver, new IntentFilter(InstallationService.ACTION_INSTALL_PROGRESS));
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (databaseHelper != null) {
             databaseHelper.close();
+        }
+        if (installProgressReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(installProgressReceiver);
         }
     }
 }

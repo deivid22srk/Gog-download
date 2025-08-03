@@ -186,13 +186,13 @@
 
     <!-- Floating Action Button for Settings -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/settingsFab"
+        android:id="@+id/installFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_settings"
-        android:contentDescription="@string/settings"
+        android:src="@android:drawable/ic_menu_upload"
+        android:contentDescription="Instalar Jogo"
         app:backgroundTint="?attr/colorPrimaryContainer"
         app:tint="?attr/colorOnPrimaryContainer" />
 
