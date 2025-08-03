@@ -43,6 +43,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import com.example.gogdownloader.adapters.DownloadLinkAdapter;
 
 
 import org.json.JSONObject;
