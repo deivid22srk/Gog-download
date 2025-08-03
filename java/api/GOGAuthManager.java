@@ -446,7 +446,33 @@ public class GOGAuthManager {
         userData.put("userId", accountData.optString("userId", ""));
         userData.put("first_name", accountData.optString("firstName", ""));
         userData.put("last_name", accountData.optString("lastName", ""));
-        userData.put("avatar", accountData.optString("avatar", ""));
+
+        String avatarUrl = "";
+        if (accountData.has("avatars")) {
+            JSONObject avatars = accountData.getJSONObject("avatars");
+            // Prioritize the high-resolution image
+            avatarUrl = avatars.optString("menu_user_av_big2", "");
+            // Fallback to other sizes if the preferred one isn't available
+            if (avatarUrl.isEmpty()) {
+                avatarUrl = avatars.optString("menu_user_av_big", "");
+            }
+            if (avatarUrl.isEmpty()) {
+                avatarUrl = avatars.optString("menu_user_av_small2", "");
+            }
+            if (avatarUrl.isEmpty()) {
+                avatarUrl = avatars.optString("menu_user_av_small", "");
+            }
+        }
+
+        if (avatarUrl.isEmpty()) {
+            // Fallback to the old method if the new one fails
+            avatarUrl = accountData.optString("avatar", "");
+            if (avatarUrl.startsWith("//")) {
+                avatarUrl = "https:" + avatarUrl;
+            }
+        }
+
+        userData.put("avatar", avatarUrl);
         
         Log.d(TAG, "Processed account basic data: " + userData.toString());
         return userData;
