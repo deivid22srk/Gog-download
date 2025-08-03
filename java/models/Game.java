@@ -90,7 +90,7 @@ public class Game implements Serializable {
             // Fallback for library view where only a base image hash is provided
             String baseImage = json.optString("image", "");
             if (!baseImage.isEmpty()) {
-                game.coverImage = baseImage + "_glx_logo.jpg";
+                game.coverImage = baseImage + "_product_tile_398.jpg";
             }
         }
 
