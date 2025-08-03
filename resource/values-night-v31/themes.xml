@@ -31,5 +31,9 @@
     <!-- Enhanced Android 12+ features for dark mode -->
     <item name="android:windowSplashScreenBackground">?attr/colorSurface</item>
     <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+
+    <!-- Material You Dialogs -->
+    <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+    <item name="alertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
   </style>
 </resources>
