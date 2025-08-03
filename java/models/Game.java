@@ -71,14 +71,27 @@ public class Game implements Serializable {
         // Imagens - tratar diferentes formatos da API
         JSONObject images = json.optJSONObject("images");
         if (images != null) {
-            game.coverImage = images.optString("sidebarIcon", "");
+            // Prefer the high-resolution logo if available
+            game.coverImage = images.optString("logo2x", "");
+            if (game.coverImage.isEmpty()) {
+                game.coverImage = images.optString("logo", "");
+            }
+            if (game.coverImage.isEmpty()) {
+                game.coverImage = images.optString("sidebarIcon2x", "");
+            }
+            if (game.coverImage.isEmpty()) {
+                game.coverImage = images.optString("sidebarIcon", "");
+            }
             if (game.coverImage.isEmpty()) {
                 game.coverImage = images.optString("icon", "");
             }
             game.backgroundImage = images.optString("background", "");
         } else {
-            // Fallback para o campo "image" se o objeto "images" não existir
-            game.coverImage = json.optString("image", "");
+            // Fallback for library view where only a base image hash is provided
+            String baseImage = json.optString("image", "");
+            if (!baseImage.isEmpty()) {
+                game.coverImage = baseImage + "_glx_logo.jpg";
+            }
         }
 
         // As imagens corretas vêm dos detalhes do jogo via loadGameDetails()
