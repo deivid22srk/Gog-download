@@ -33,7 +33,6 @@ public class SettingsActivity extends AppCompatActivity {
     private Button changeSafFolderButton;
     private Button logoutButton;
     private Button clearCacheButton;
-    private Button saveButton;
     
     private PreferencesManager preferencesManager;
     private DatabaseHelper databaseHelper;
@@ -71,7 +70,6 @@ public class SettingsActivity extends AppCompatActivity {
         changeSafFolderButton = findViewById(R.id.changeSafFolderButton);
         logoutButton = findViewById(R.id.logoutButton);
         clearCacheButton = findViewById(R.id.clearCacheButton);
-        saveButton = findViewById(R.id.saveButton);
     }
     
     private void initializeManagers() {
@@ -109,7 +107,6 @@ public class SettingsActivity extends AppCompatActivity {
         changeSafFolderButton.setOnClickListener(v -> openFolderPicker());
         logoutButton.setOnClickListener(v -> showLogoutConfirmation());
         clearCacheButton.setOnClickListener(v -> showClearCacheConfirmation());
-        saveButton.setOnClickListener(v -> saveSettings());
     }
     
     private void loadCurrentSettings() {
@@ -239,52 +236,6 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
     
-    private void saveSettings() {
-        try {
-            // Validar pasta selecionada
-            if (selectedPath == null || selectedPath.isEmpty()) {
-                Toast.makeText(this, "Selecione uma pasta de download", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
-            // Verificar se a pasta é válida
-            if (!preferencesManager.isValidDownloadPath(selectedPath)) {
-                // Tentar criar a pasta
-                if (!preferencesManager.createDownloadDirectory(selectedPath)) {
-                    Toast.makeText(this, "Não foi possível criar/acessar a pasta selecionada", Toast.LENGTH_LONG).show();
-                    return;
-                }
-            }
-            
-            // Salvar configurações
-            preferencesManager.setDownloadPath(selectedPath);
-            
-            Toast.makeText(this, getString(R.string.settings_saved), Toast.LENGTH_SHORT).show();
-            
-            // Retornar com resultado OK
-            setResult(RESULT_OK);
-            finish();
-            
-        } catch (Exception e) {
-            Toast.makeText(this, "Erro ao salvar configurações: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-    
-    @Override
-    public void onBackPressed() {
-        // Verificar se há mudanças não salvas
-        String currentSavedPath = preferencesManager.getDownloadPath();
-        if (!currentSavedPath.equals(selectedPath)) {
-            new AlertDialog.Builder(this)
-                    .setTitle("Mudanças não salvas")
-                    .setMessage("Você tem mudanças não salvas. Deseja sair sem salvar?")
-                    .setPositiveButton("Sair", (dialog, which) -> super.onBackPressed())
-                    .setNegativeButton("Cancelar", null)
-                    .show();
-        } else {
-            super.onBackPressed();
-        }
-    }
     
     @Override
     protected void onDestroy() {
