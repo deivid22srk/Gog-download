@@ -34,5 +34,6 @@
 
     <!-- Material You Dialogs -->
     <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+    <item name="alertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
   </style>
 </resources>
