@@ -447,11 +447,20 @@ public class GOGAuthManager {
         userData.put("first_name", accountData.optString("firstName", ""));
         userData.put("last_name", accountData.optString("lastName", ""));
 
-        String avatarUrl = accountData.optString("avatar", "");
-        if (avatarUrl.startsWith("//")) {
-            avatarUrl = "https:" + avatarUrl;
-            Log.d(TAG, "Corrected protocol-relative avatar URL to: " + avatarUrl);
+        String avatarUrl = "";
+        if (accountData.has("avatars")) {
+            JSONObject avatars = accountData.getJSONObject("avatars");
+            avatarUrl = avatars.optString("menu_user_av_small", "");
         }
+
+        if (avatarUrl.isEmpty()) {
+            // Fallback to the old method if the new one fails
+            avatarUrl = accountData.optString("avatar", "");
+            if (avatarUrl.startsWith("//")) {
+                avatarUrl = "https:" + avatarUrl;
+            }
+        }
+
         userData.put("avatar", avatarUrl);
         
         Log.d(TAG, "Processed account basic data: " + userData.toString());
