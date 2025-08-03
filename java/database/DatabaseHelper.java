@@ -14,6 +14,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.content.ContentValues;
+import android.database.Cursor;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     
@@ -21,7 +23,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     // Database info
     private static final String DATABASE_NAME = "gog_downloader.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // Versão atualizada para suporte a múltiplos downloads
     
     // Table names
     private static final String TABLE_GAMES = "games";
@@ -48,6 +50,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Downloads table columns
     private static final String COLUMN_DOWNLOAD_ID = "id";
     private static final String COLUMN_DOWNLOAD_GAME_ID = "game_id";
+    private static final String COLUMN_DOWNLOAD_LINK_ID = "download_link_id";
+    private static final String COLUMN_DOWNLOAD_FILE_NAME = "file_name";
     private static final String COLUMN_DOWNLOAD_URL = "download_url";
     private static final String COLUMN_DOWNLOAD_FILE_PATH = "file_path";
     private static final String COLUMN_DOWNLOAD_STATUS = "status";
@@ -56,6 +60,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_DOWNLOAD_DOWNLOADED_BYTES = "downloaded_bytes";
     private static final String COLUMN_DOWNLOAD_START_TIME = "start_time";
     private static final String COLUMN_DOWNLOAD_END_TIME = "end_time";
+    private static final String COLUMN_DOWNLOAD_SPEED = "download_speed";
+    private static final String COLUMN_DOWNLOAD_ETA = "eta";
+    private static final String COLUMN_DOWNLOAD_RETRY_COUNT = "retry_count";
+    private static final String COLUMN_DOWNLOAD_ERROR_MESSAGE = "error_message";
+    
+    // Batch downloads table columns
+    private static final String TABLE_DOWNLOAD_BATCHES = "download_batches";
+    private static final String COLUMN_BATCH_ID = "id";
+    private static final String COLUMN_BATCH_GAME_ID = "game_id";
+    private static final String COLUMN_BATCH_TOTAL_FILES = "total_files";
+    private static final String COLUMN_BATCH_COMPLETED_FILES = "completed_files";
+    private static final String COLUMN_BATCH_STATUS = "status";
+    private static final String COLUMN_BATCH_START_TIME = "start_time";
+    private static final String COLUMN_BATCH_END_TIME = "end_time";
     
     // Create table statements
     private static final String CREATE_GAMES_TABLE = 
@@ -82,6 +100,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         "CREATE TABLE " + TABLE_DOWNLOADS + " (" +
             COLUMN_DOWNLOAD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             COLUMN_DOWNLOAD_GAME_ID + " INTEGER NOT NULL, " +
+            COLUMN_DOWNLOAD_LINK_ID + " TEXT NOT NULL, " +
+            COLUMN_DOWNLOAD_FILE_NAME + " TEXT NOT NULL, " +
             COLUMN_DOWNLOAD_URL + " TEXT NOT NULL, " +
             COLUMN_DOWNLOAD_FILE_PATH + " TEXT, " +
             COLUMN_DOWNLOAD_STATUS + " TEXT DEFAULT 'PENDING', " +
@@ -90,7 +110,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             COLUMN_DOWNLOAD_DOWNLOADED_BYTES + " INTEGER DEFAULT 0, " +
             COLUMN_DOWNLOAD_START_TIME + " INTEGER DEFAULT 0, " +
             COLUMN_DOWNLOAD_END_TIME + " INTEGER DEFAULT 0, " +
+            COLUMN_DOWNLOAD_SPEED + " REAL DEFAULT 0, " +
+            COLUMN_DOWNLOAD_ETA + " INTEGER DEFAULT 0, " +
+            COLUMN_DOWNLOAD_RETRY_COUNT + " INTEGER DEFAULT 0, " +
+            COLUMN_DOWNLOAD_ERROR_MESSAGE + " TEXT, " +
             "FOREIGN KEY(" + COLUMN_DOWNLOAD_GAME_ID + ") REFERENCES " + 
+                TABLE_GAMES + "(" + COLUMN_GAME_ID + ")" +
+            ")";
+        
+    private static final String CREATE_DOWNLOAD_BATCHES_TABLE = 
+        "CREATE TABLE " + TABLE_DOWNLOAD_BATCHES + " (" +
+            COLUMN_BATCH_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COLUMN_BATCH_GAME_ID + " INTEGER NOT NULL, " +
+            COLUMN_BATCH_TOTAL_FILES + " INTEGER DEFAULT 0, " +
+            COLUMN_BATCH_COMPLETED_FILES + " INTEGER DEFAULT 0, " +
+            COLUMN_BATCH_STATUS + " TEXT DEFAULT 'PENDING', " +
+            COLUMN_BATCH_START_TIME + " INTEGER DEFAULT 0, " +
+            COLUMN_BATCH_END_TIME + " INTEGER DEFAULT 0, " +
+            "FOREIGN KEY(" + COLUMN_BATCH_GAME_ID + ") REFERENCES " + 
                 TABLE_GAMES + "(" + COLUMN_GAME_ID + ")" +
         ")";
     
@@ -102,19 +139,54 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_GAMES_TABLE);
         db.execSQL(CREATE_DOWNLOADS_TABLE);
+        db.execSQL(CREATE_DOWNLOAD_BATCHES_TABLE);
         
         // Criar índices para melhor performance
         db.execSQL("CREATE INDEX idx_games_status ON " + TABLE_GAMES + "(" + COLUMN_GAME_STATUS + ")");
         db.execSQL("CREATE INDEX idx_downloads_game_id ON " + TABLE_DOWNLOADS + "(" + COLUMN_DOWNLOAD_GAME_ID + ")");
         db.execSQL("CREATE INDEX idx_downloads_status ON " + TABLE_DOWNLOADS + "(" + COLUMN_DOWNLOAD_STATUS + ")");
+        db.execSQL("CREATE INDEX idx_downloads_link_id ON " + TABLE_DOWNLOADS + "(" + COLUMN_DOWNLOAD_LINK_ID + ")");
+        db.execSQL("CREATE INDEX idx_batches_game_id ON " + TABLE_DOWNLOAD_BATCHES + "(" + COLUMN_BATCH_GAME_ID + ")");
+        db.execSQL("CREATE INDEX idx_batches_status ON " + TABLE_DOWNLOAD_BATCHES + "(" + COLUMN_BATCH_STATUS + ")");
     }
     
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Para versões futuras, implementar migração adequada
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOWNLOADS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_GAMES);
-        onCreate(db);
+        Log.d(TAG, "Upgrading database from version " + oldVersion + " to " + newVersion);
+        
+        if (oldVersion < 2) {
+            // Migração da versão 1 para 2: adicionar suporte a múltiplos downloads
+            
+            // Fazer backup dos downloads existentes
+            List<ContentValues> existingDownloads = new ArrayList<>();
+            Cursor cursor = db.query(TABLE_DOWNLOADS, null, null, null, null, null, null);
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    ContentValues values = new ContentValues();
+                    values.put(COLUMN_DOWNLOAD_GAME_ID, cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_GAME_ID)));
+                    values.put(COLUMN_DOWNLOAD_URL, cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_URL)));
+                    values.put(COLUMN_DOWNLOAD_STATUS, cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_STATUS)));
+                    existingDownloads.add(values);
+                }
+                cursor.close();
+            }
+            
+            // Recriar tabela de downloads com nova estrutura
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_DOWNLOADS);
+            db.execSQL(CREATE_DOWNLOADS_TABLE);
+            
+            // Criar nova tabela de batches
+            db.execSQL(CREATE_DOWNLOAD_BATCHES_TABLE);
+            
+            // Recriar índices
+            db.execSQL("CREATE INDEX idx_downloads_game_id ON " + TABLE_DOWNLOADS + "(" + COLUMN_DOWNLOAD_GAME_ID + ")");
+            db.execSQL("CREATE INDEX idx_downloads_status ON " + TABLE_DOWNLOADS + "(" + COLUMN_DOWNLOAD_STATUS + ")");
+            db.execSQL("CREATE INDEX idx_downloads_link_id ON " + TABLE_DOWNLOADS + "(" + COLUMN_DOWNLOAD_LINK_ID + ")");
+            db.execSQL("CREATE INDEX idx_batches_game_id ON " + TABLE_DOWNLOAD_BATCHES + "(" + COLUMN_BATCH_GAME_ID + ")");
+            db.execSQL("CREATE INDEX idx_batches_status ON " + TABLE_DOWNLOAD_BATCHES + "(" + COLUMN_BATCH_STATUS + ")");
+            
+            Log.d(TAG, "Database upgraded successfully to version 2");
+        }
     }
     
     // Métodos para gerenciar jogos
@@ -231,6 +303,183 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return games;
     }
     
+    // Métodos para gerenciar downloads individuais
+    
+    public long insertDownload(long gameId, String downloadLinkId, String fileName, String downloadUrl) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        
+        values.put(COLUMN_DOWNLOAD_GAME_ID, gameId);
+        values.put(COLUMN_DOWNLOAD_LINK_ID, downloadLinkId);
+        values.put(COLUMN_DOWNLOAD_FILE_NAME, fileName);
+        values.put(COLUMN_DOWNLOAD_URL, downloadUrl);
+        values.put(COLUMN_DOWNLOAD_STATUS, "PENDING");
+        values.put(COLUMN_DOWNLOAD_START_TIME, System.currentTimeMillis());
+        
+        long id = db.insert(TABLE_DOWNLOADS, null, values);
+        
+        if (id == -1) {
+            Log.e(TAG, "Error inserting download for game ID: " + gameId);
+        } else {
+            Log.d(TAG, "Download inserted successfully: " + fileName);
+        }
+        
+        return id;
+    }
+    
+    public boolean updateDownloadProgress(long downloadId, long downloadedBytes, long totalBytes, double speed, long eta) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        
+        values.put(COLUMN_DOWNLOAD_DOWNLOADED_BYTES, downloadedBytes);
+        values.put(COLUMN_DOWNLOAD_TOTAL_BYTES, totalBytes);
+        values.put(COLUMN_DOWNLOAD_SPEED, speed);
+        values.put(COLUMN_DOWNLOAD_ETA, eta);
+        
+        int progress = totalBytes > 0 ? (int) ((downloadedBytes * 100) / totalBytes) : 0;
+        values.put(COLUMN_DOWNLOAD_PROGRESS, progress);
+        
+        int rowsAffected = db.update(TABLE_DOWNLOADS, values, 
+                COLUMN_DOWNLOAD_ID + " = ?", new String[]{String.valueOf(downloadId)});
+        
+        return rowsAffected > 0;
+    }
+    
+    public boolean updateDownloadStatus(long downloadId, String status, String errorMessage) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        
+        values.put(COLUMN_DOWNLOAD_STATUS, status);
+        if (errorMessage != null) {
+            values.put(COLUMN_DOWNLOAD_ERROR_MESSAGE, errorMessage);
+        }
+        
+        if ("COMPLETED".equals(status) || "FAILED".equals(status) || "CANCELLED".equals(status)) {
+            values.put(COLUMN_DOWNLOAD_END_TIME, System.currentTimeMillis());
+        }
+        
+        int rowsAffected = db.update(TABLE_DOWNLOADS, values, 
+                COLUMN_DOWNLOAD_ID + " = ?", new String[]{String.valueOf(downloadId)});
+        
+        return rowsAffected > 0;
+    }
+    
+    public List<ContentValues> getActiveDownloads() {
+        List<ContentValues> downloads = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        
+        Cursor cursor = db.query(TABLE_DOWNLOADS, null, 
+                COLUMN_DOWNLOAD_STATUS + " IN ('PENDING', 'DOWNLOADING')", null,
+                null, null, COLUMN_DOWNLOAD_START_TIME + " ASC");
+        
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                ContentValues values = new ContentValues();
+                values.put("id", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_ID)));
+                values.put("game_id", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_GAME_ID)));
+                values.put("link_id", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_LINK_ID)));
+                values.put("file_name", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_FILE_NAME)));
+                values.put("download_url", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_URL)));
+                values.put("status", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_STATUS)));
+                values.put("downloaded_bytes", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_DOWNLOADED_BYTES)));
+                values.put("total_bytes", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_TOTAL_BYTES)));
+                downloads.add(values);
+            }
+            cursor.close();
+        }
+        
+        return downloads;
+    }
+    
+    public List<ContentValues> getDownloadsForGame(long gameId) {
+        List<ContentValues> downloads = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        
+        Cursor cursor = db.query(TABLE_DOWNLOADS, null, 
+                COLUMN_DOWNLOAD_GAME_ID + " = ?", new String[]{String.valueOf(gameId)},
+                null, null, COLUMN_DOWNLOAD_START_TIME + " ASC");
+        
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                ContentValues values = new ContentValues();
+                values.put("id", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_ID)));
+                values.put("link_id", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_LINK_ID)));
+                values.put("file_name", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_FILE_NAME)));
+                values.put("status", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_STATUS)));
+                values.put("progress", cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_PROGRESS)));
+                values.put("downloaded_bytes", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_DOWNLOADED_BYTES)));
+                values.put("total_bytes", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_TOTAL_BYTES)));
+                values.put("speed", cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_SPEED)));
+                values.put("eta", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_ETA)));
+                downloads.add(values);
+            }
+            cursor.close();
+        }
+        
+        return downloads;
+    }
+    
+    // Métodos para gerenciar batches de download
+    
+    public long createDownloadBatch(long gameId, int totalFiles) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        
+        values.put(COLUMN_BATCH_GAME_ID, gameId);
+        values.put(COLUMN_BATCH_TOTAL_FILES, totalFiles);
+        values.put(COLUMN_BATCH_COMPLETED_FILES, 0);
+        values.put(COLUMN_BATCH_STATUS, "PENDING");
+        values.put(COLUMN_BATCH_START_TIME, System.currentTimeMillis());
+        
+        long id = db.insert(TABLE_DOWNLOAD_BATCHES, null, values);
+        
+        if (id == -1) {
+            Log.e(TAG, "Error creating download batch for game ID: " + gameId);
+        } else {
+            Log.d(TAG, "Download batch created successfully: " + id);
+        }
+        
+        return id;
+    }
+    
+    public boolean updateBatchProgress(long batchId, int completedFiles, String status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        
+        values.put(COLUMN_BATCH_COMPLETED_FILES, completedFiles);
+        values.put(COLUMN_BATCH_STATUS, status);
+        
+        if ("COMPLETED".equals(status) || "FAILED".equals(status) || "CANCELLED".equals(status)) {
+            values.put(COLUMN_BATCH_END_TIME, System.currentTimeMillis());
+        }
+        
+        int rowsAffected = db.update(TABLE_DOWNLOAD_BATCHES, values, 
+                COLUMN_BATCH_ID + " = ?", new String[]{String.valueOf(batchId)});
+        
+        return rowsAffected > 0;
+    }
+    
+    public ContentValues getDownloadBatch(long gameId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        ContentValues batch = null;
+        
+        Cursor cursor = db.query(TABLE_DOWNLOAD_BATCHES, null, 
+                COLUMN_BATCH_GAME_ID + " = ? AND " + COLUMN_BATCH_STATUS + " NOT IN ('COMPLETED', 'CANCELLED')", 
+                new String[]{String.valueOf(gameId)}, null, null, 
+                COLUMN_BATCH_START_TIME + " DESC", "1");
+        
+        if (cursor != null && cursor.moveToFirst()) {
+            batch = new ContentValues();
+            batch.put("id", cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_BATCH_ID)));
+            batch.put("total_files", cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BATCH_TOTAL_FILES)));
+            batch.put("completed_files", cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BATCH_COMPLETED_FILES)));
+            batch.put("status", cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_BATCH_STATUS)));
+            cursor.close();
+        }
+        
+        return batch;
+    }
+    
     public boolean deleteGame(long gameId) {
         SQLiteDatabase db = this.getWritableDatabase();
         
@@ -250,6 +499,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         
         db.beginTransaction();
         try {
+            db.delete(TABLE_DOWNLOAD_BATCHES, null, null);
             db.delete(TABLE_DOWNLOADS, null, null);
             db.delete(TABLE_GAMES, null, null);
             db.setTransactionSuccessful();

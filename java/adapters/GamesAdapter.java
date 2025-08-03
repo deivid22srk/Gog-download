@@ -68,11 +68,23 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
     }
 
     public void updateGameProgress(long gameId, long bytesDownloaded, long totalBytes) {
+        updateGameProgress(gameId, bytesDownloaded, totalBytes, 0.0f, 0, 0, 0);
+    }
+    
+    public void updateGameProgress(long gameId, long bytesDownloaded, long totalBytes, 
+                                   float downloadSpeed, long eta, int currentFileIndex, int totalFiles) {
         for (int i = 0; i < filteredGames.size(); i++) {
             Game game = filteredGames.get(i);
             if (game.getId() == gameId) {
                 game.setDownloadProgress(bytesDownloaded);
                 game.setTotalSize(totalBytes);
+                
+                // Armazenar informações adicionais no game se necessário
+                game.setDownloadSpeed(downloadSpeed);
+                game.setEta(eta);
+                game.setCurrentFileIndex(currentFileIndex);
+                game.setTotalFiles(totalFiles);
+                
                 notifyItemChanged(i);
                 break;
             }
@@ -184,7 +196,7 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             if (game.getCoverImage() != null && !game.getCoverImage().isEmpty()) {
                 ImageLoader.loadImage(context, game.getCoverImage(), game.getBackgroundImage(), gameCoverImage);
             } else {
-                gameCoverImage.setImageResource(R.drawable.ic_image);
+                gameCoverImage.setImageResource(android.R.drawable.ic_menu_gallery);
             }
             
             // Status e ações baseados no estado do download
@@ -228,9 +240,29 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             
             int progress = game.getDownloadProgressPercent();
             downloadProgressBar.setProgress(progress);
-            downloadProgressText.setText(
-                context.getString(R.string.download_progress, progress, game.getFormattedSize())
-            );
+            
+            // Criar texto de progresso mais detalhado
+            StringBuilder progressText = new StringBuilder();
+            progressText.append(context.getString(R.string.download_progress, progress, game.getFormattedSize()));
+            
+            // Adicionar velocidade e ETA se disponíveis
+            if (game.getDownloadSpeed() > 0) {
+                progressText.append("\n");
+                progressText.append(context.getString(R.string.download_speed, game.getFormattedDownloadSpeed()));
+                
+                if (game.getEta() > 0) {
+                    progressText.append(" • ");
+                    progressText.append(context.getString(R.string.download_eta, game.getFormattedEta()));
+                }
+            }
+            
+            // Adicionar informação de múltiplos arquivos se aplicável
+            if (game.getTotalFiles() > 1) {
+                progressText.append("\n");
+                progressText.append(game.getFileProgressText());
+            }
+            
+            downloadProgressText.setText(progressText.toString());
             
             actionButton.setText(context.getString(R.string.cancel));
             actionButton.setEnabled(true);

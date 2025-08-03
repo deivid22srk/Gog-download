@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,94 +16,157 @@ import com.example.gogdownloader.models.DownloadLink;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Set;
 
-public class DownloadLinkAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-
-    private static final int TYPE_HEADER = 0;
-    private static final int TYPE_ITEM = 1;
+public class DownloadLinkAdapter extends RecyclerView.Adapter<DownloadLinkAdapter.DownloadLinkViewHolder> {
 
     private Context context;
-    private List<Object> items;
-    private OnDownloadLinkSelectedListener listener;
+    private List<DownloadLink> downloadLinks;
+    private Set<DownloadLink> selectedLinks;
+    private OnSelectionChangedListener listener;
 
-    public interface OnDownloadLinkSelectedListener {
-        void onDownloadLinkSelected(DownloadLink downloadLink);
+    public interface OnSelectionChangedListener {
+        void onSelectionChanged(Set<DownloadLink> selectedLinks);
     }
 
-    public DownloadLinkAdapter(Context context, List<DownloadLink> downloadLinks, OnDownloadLinkSelectedListener listener) {
+    public DownloadLinkAdapter(Context context, List<DownloadLink> downloadLinks, OnSelectionChangedListener listener) {
         this.context = context;
+        this.downloadLinks = new ArrayList<>(downloadLinks);
+        this.selectedLinks = new HashSet<>();
         this.listener = listener;
-        this.items = new ArrayList<>();
-
-        // Group by type
-        Map<DownloadLink.FileType, List<DownloadLink>> groupedLinks =
-                downloadLinks.stream().collect(Collectors.groupingBy(DownloadLink::getType));
-
-        for (Map.Entry<DownloadLink.FileType, List<DownloadLink>> entry : groupedLinks.entrySet()) {
-            items.add(entry.getKey().name());
-            items.addAll(entry.getValue());
-        }
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        if (items.get(position) instanceof String) {
-            return TYPE_HEADER;
-        } else {
-            return TYPE_ITEM;
+    public void selectAll() {
+        selectedLinks.clear();
+        selectedLinks.addAll(downloadLinks);
+        notifyDataSetChanged();
+        if (listener != null) {
+            listener.onSelectionChanged(selectedLinks);
         }
+    }
+    
+    public void selectNone() {
+        selectedLinks.clear();
+        notifyDataSetChanged();
+        if (listener != null) {
+            listener.onSelectionChanged(selectedLinks);
+        }
+    }
+    
+    public Set<DownloadLink> getSelectedLinks() {
+        return new HashSet<>(selectedLinks);
+    }
+    
+    public long getTotalSelectedSize() {
+        long totalSize = 0;
+        for (DownloadLink link : selectedLinks) {
+            totalSize += link.getSize();
+        }
+        return totalSize;
     }
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == TYPE_HEADER) {
-            View view = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent, false);
-            return new HeaderViewHolder(view);
-        } else {
-            View view = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_2, parent, false);
-            return new ItemViewHolder(view);
-        }
+    public DownloadLinkViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_download_link, parent, false);
+        return new DownloadLinkViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (holder.getItemViewType() == TYPE_HEADER) {
-            HeaderViewHolder headerViewHolder = (HeaderViewHolder) holder;
-            headerViewHolder.headerTitle.setText((String) items.get(position));
+    public void onBindViewHolder(@NonNull DownloadLinkViewHolder holder, int position) {
+        DownloadLink downloadLink = downloadLinks.get(position);
+        
+        // Set file name
+        holder.fileName.setText(downloadLink.getName());
+        
+        // Set file type
+        holder.fileType.setText(downloadLink.getTypeDisplayName());
+        
+        // Set platform
+        holder.filePlatform.setText(downloadLink.getPlatformDisplayName());
+        
+        // Set language (show only if not English)
+        if (downloadLink.getLanguage() != null && !"en".equals(downloadLink.getLanguage())) {
+            holder.fileLanguage.setText(downloadLink.getLanguage().toUpperCase());
+            holder.fileLanguage.setVisibility(View.VISIBLE);
         } else {
-            ItemViewHolder itemViewHolder = (ItemViewHolder) holder;
-            DownloadLink downloadLink = (DownloadLink) items.get(position);
-            itemViewHolder.text1.setText(downloadLink.getName());
-            itemViewHolder.text2.setText(downloadLink.getFormattedSize());
-            itemViewHolder.itemView.setOnClickListener(v -> listener.onDownloadLinkSelected(downloadLink));
+            holder.fileLanguage.setVisibility(View.GONE);
+        }
+        
+        // Set file size
+        holder.fileSize.setText(downloadLink.getFormattedSize());
+        
+        // Set file type icon
+        int iconRes = getFileTypeIcon(downloadLink.getType());
+        holder.fileTypeIcon.setImageResource(iconRes);
+        
+        // Set checkbox state
+        boolean isSelected = selectedLinks.contains(downloadLink);
+        holder.downloadCheckbox.setChecked(isSelected);
+        
+        // Handle checkbox changes
+        holder.downloadCheckbox.setOnCheckedChangeListener(null); // Remove previous listener
+        holder.downloadCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                selectedLinks.add(downloadLink);
+            } else {
+                selectedLinks.remove(downloadLink);
+            }
+            
+            if (listener != null) {
+                listener.onSelectionChanged(selectedLinks);
+            }
+        });
+        
+        // Handle item click to toggle checkbox
+        holder.itemView.setOnClickListener(v -> {
+            holder.downloadCheckbox.setChecked(!holder.downloadCheckbox.isChecked());
+        });
+    }
+    
+    private int getFileTypeIcon(DownloadLink.FileType type) {
+        switch (type) {
+            case INSTALLER:
+                return android.R.drawable.stat_sys_download;
+            case PATCH:
+                return android.R.drawable.ic_menu_edit;
+            case EXTRA:
+                return android.R.drawable.ic_menu_gallery;
+            case DLC:
+                return android.R.drawable.ic_menu_add;
+            case LANGUAGE_PACK:
+                return android.R.drawable.ic_menu_agenda;
+            default:
+                return android.R.drawable.stat_sys_download;
         }
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return downloadLinks.size();
     }
 
-    static class HeaderViewHolder extends RecyclerView.ViewHolder {
-        TextView headerTitle;
+    static class DownloadLinkViewHolder extends RecyclerView.ViewHolder {
+        CheckBox downloadCheckbox;
+        ImageView fileTypeIcon;
+        TextView fileName;
+        TextView fileType;
+        TextView filePlatform;
+        TextView fileLanguage;
+        TextView fileSize;
+        ImageView downloadStatus;
 
-        HeaderViewHolder(@NonNull View itemView) {
+        DownloadLinkViewHolder(@NonNull View itemView) {
             super(itemView);
-            headerTitle = itemView.findViewById(android.R.id.text1);
-        }
-    }
-
-    static class ItemViewHolder extends RecyclerView.ViewHolder {
-        TextView text1;
-        TextView text2;
-
-        ItemViewHolder(@NonNull View itemView) {
-            super(itemView);
-            text1 = itemView.findViewById(android.R.id.text1);
-            text2 = itemView.findViewById(android.R.id.text2);
+            downloadCheckbox = itemView.findViewById(R.id.downloadCheckbox);
+            fileTypeIcon = itemView.findViewById(R.id.fileTypeIcon);
+            fileName = itemView.findViewById(R.id.fileName);
+            fileType = itemView.findViewById(R.id.fileType);
+            filePlatform = itemView.findViewById(R.id.filePlatform);
+            fileLanguage = itemView.findViewById(R.id.fileLanguage);
+            fileSize = itemView.findViewById(R.id.fileSize);
+            downloadStatus = itemView.findViewById(R.id.downloadStatus);
         }
     }
 }

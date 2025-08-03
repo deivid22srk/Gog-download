@@ -66,7 +66,7 @@ public class ImageLoader {
                 load(context, backgroundImageUrl, null, imageView);
             } else {
                 Log.w(TAG, "Image URLs are empty, using placeholder");
-                imageView.setImageResource(R.drawable.ic_image);
+                imageView.setImageResource(android.R.drawable.ic_menu_gallery);
             }
             return;
         }
@@ -81,7 +81,7 @@ public class ImageLoader {
         
         // Definir placeholder enquanto carrega
         Log.d(TAG, "Setting placeholder for: " + coverImageUrl);
-        imageView.setImageResource(R.drawable.ic_image);
+        imageView.setImageResource(android.R.drawable.ic_menu_gallery);
         
         // Carregar imagem em background
         Log.d(TAG, "Starting background download for: " + coverImageUrl);

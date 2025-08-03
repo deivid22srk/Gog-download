@@ -40,6 +40,45 @@
     <string name="download_complete">Download completo: %1$s</string>
     <string name="download_failed">Falha no download: %1$s</string>
     <string name="download_cancelled">Download cancelado: %1$s</string>
+    <string name="download_speed">%1$s</string>
+    <string name="download_eta">%1$s restante</string>
+    <string name="download_batch_progress">Baixando arquivo %1$d de %2$d</string>
+    <string name="download_batch_complete">Batch de downloads completo: %1$s</string>
+    <string name="download_batch_failed">Falha no batch de downloads: %1$s</string>
+    
+    <!-- Download Selection Dialog -->
+    <string name="select_files_title">Selecionar Arquivos para Download</string>
+    <string name="select_files_subtitle">Escolha os arquivos que deseja baixar para %1$s</string>
+    <string name="select_all">Selecionar Todos</string>
+    <string name="select_none">Desmarcar Todos</string>
+    <string name="files_selected">%1$d arquivo(s) selecionado(s)</string>
+    <string name="total_size_selected">Tamanho total: %1$s</string>
+    <string name="download_selected">Baixar Selecionados</string>
+    <string name="no_files_selected">Nenhum arquivo selecionado</string>
+    <string name="loading_download_links">Carregando links de download...</string>
+    <string name="error_loading_links">Erro ao carregar links de download</string>
+    
+    <!-- File Types -->
+    <string name="file_type_installer">Instalador</string>
+    <string name="file_type_patch">Atualização</string>
+    <string name="file_type_extra">Extra</string>
+    <string name="file_type_unknown">Desconhecido</string>
+    
+    <!-- Platforms -->
+    <string name="platform_windows">Windows</string>
+    <string name="platform_mac">Mac</string>
+    <string name="platform_linux">Linux</string>
+    <string name="platform_unknown">Desconhecido</string>
+    
+    <!-- Languages -->
+    <string name="language_en">Inglês</string>
+    <string name="language_pt">Português</string>
+    <string name="language_es">Espanhol</string>
+    <string name="language_fr">Francês</string>
+    <string name="language_de">Alemão</string>
+    <string name="language_it">Italiano</string>
+    <string name="language_ru">Russo</string>
+    <string name="language_unknown">Desconhecido</string>
     
     <!-- General -->
     <string name="error">Erro</string>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Checkbox para seleção -->
+    <CheckBox
+        android:id="@+id/downloadCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="12dp" />
+
+    <!-- Ícone do tipo de arquivo -->
+    <ImageView
+        android:id="@+id/fileTypeIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="12dp"
+        android:src="@android:drawable/ic_menu_gallery"
+        android:tint="?android:attr/textColorSecondary" />
+
+    <!-- Informações do arquivo -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Nome do arquivo -->
+        <TextView
+            android:id="@+id/fileName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="nome_do_arquivo.exe"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <!-- Detalhes do arquivo (tipo, plataforma, idioma) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="4dp">
+
+            <TextView
+                android:id="@+id/fileType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Instalador"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:background="@drawable/bg_chip"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/filePlatform"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Windows"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:background="@drawable/bg_chip"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/fileLanguage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EN"
+                android:textSize="12sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:background="@drawable/bg_chip"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- Tamanho do arquivo -->
+        <TextView
+            android:id="@+id/fileSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1.2 GB"
+            android:textSize="14sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:paddingTop="4dp" />
+
+    </LinearLayout>
+
+    <!-- Indicador de status (se já baixado) -->
+    <ImageView
+        android:id="@+id/downloadStatus"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:src="@android:drawable/stat_sys_download"
+        android:tint="?android:attr/textColorSecondary"
+        android:visibility="gone" />
+
+</LinearLayout>

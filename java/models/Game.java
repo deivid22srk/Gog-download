@@ -37,6 +37,12 @@ public class Game implements Serializable {
     private String developer;
     private String publisher;
     
+    // Informações adicionais de download
+    private float downloadSpeed; // bytes por segundo
+    private long eta; // segundos restantes
+    private int currentFileIndex; // arquivo atual (0-based)
+    private int totalFiles; // total de arquivos
+    
     public Game() {
         this.downloadLinks = new ArrayList<>();
         this.status = DownloadStatus.NOT_DOWNLOADED;
@@ -248,6 +254,18 @@ public class Game implements Serializable {
     public String getPublisher() { return publisher; }
     public void setPublisher(String publisher) { this.publisher = publisher; }
     
+    public float getDownloadSpeed() { return downloadSpeed; }
+    public void setDownloadSpeed(float downloadSpeed) { this.downloadSpeed = downloadSpeed; }
+    
+    public long getEta() { return eta; }
+    public void setEta(long eta) { this.eta = eta; }
+    
+    public int getCurrentFileIndex() { return currentFileIndex; }
+    public void setCurrentFileIndex(int currentFileIndex) { this.currentFileIndex = currentFileIndex; }
+    
+    public int getTotalFiles() { return totalFiles; }
+    public void setTotalFiles(int totalFiles) { this.totalFiles = totalFiles; }
+    
     // Métodos utilitários
     public String getGenresString() {
         return String.join(", ", genres);
@@ -269,6 +287,34 @@ public class Game implements Serializable {
         int exp = (int) (Math.log(bytes) / Math.log(1024));
         String pre = "KMGTPE".charAt(exp-1) + "";
         return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
+    }
+    
+    public String getFormattedDownloadSpeed() {
+        if (downloadSpeed <= 0) return "--";
+        return formatFileSize((long) downloadSpeed) + "/s";
+    }
+    
+    public String getFormattedEta() {
+        if (eta <= 0) return "--";
+        
+        long hours = eta / 3600;
+        long minutes = (eta % 3600) / 60;
+        long seconds = eta % 60;
+        
+        if (hours > 0) {
+            return String.format("%dh %02dm", hours, minutes);
+        } else if (minutes > 0) {
+            return String.format("%dm %02ds", minutes, seconds);
+        } else {
+            return String.format("%ds", seconds);
+        }
+    }
+    
+    public String getFileProgressText() {
+        if (totalFiles > 1) {
+            return String.format("Arquivo %d de %d", currentFileIndex + 1, totalFiles);
+        }
+        return "";
     }
     
     @Override

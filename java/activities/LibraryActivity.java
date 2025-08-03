@@ -1,7 +1,13 @@
 package com.example.gogdownloader.activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -11,45 +17,40 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.provider.DocumentsContract;
+import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gogdownloader.R;
+import com.example.gogdownloader.adapters.DownloadLinkAdapter;
 import com.example.gogdownloader.adapters.GamesAdapter;
 import com.example.gogdownloader.api.GOGAuthManager;
 import com.example.gogdownloader.api.GOGLibraryManager;
 import com.example.gogdownloader.database.DatabaseHelper;
+import com.example.gogdownloader.models.DownloadLink;
 import com.example.gogdownloader.models.Game;
 import com.example.gogdownloader.services.DownloadService;
-import com.example.gogdownloader.utils.ImageLoader;
-import com.example.gogdownloader.utils.SAFDownloadManager;
 import com.example.gogdownloader.utils.DynamicColorTester;
-import com.example.gogdownloader.utils.PreferencesManager;
+import com.example.gogdownloader.utils.ImageLoader;
 import com.example.gogdownloader.utils.PermissionHelper;
-import android.widget.Toast;
+import com.example.gogdownloader.utils.PreferencesManager;
+import com.example.gogdownloader.utils.SAFDownloadManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
-import android.text.TextWatcher;
-import android.text.Editable;
-import com.example.gogdownloader.models.DownloadLink;
-import java.util.ArrayList;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.IntentFilter;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import com.example.gogdownloader.adapters.DownloadLinkAdapter;
-
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGameActionListener {
     
@@ -75,7 +76,8 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     // Launcher para seleção de pasta de download
     private ActivityResultLauncher<Intent> folderPickerLauncher;
     private Game pendingDownloadGame; // Jogo aguardando seleção de pasta
-    private DownloadLink pendingDownloadLink;
+    private DownloadLink pendingDownloadLink; // Para compatibilidade com código antigo
+    private List<DownloadLink> pendingSelectedLinks; // Para múltiplos downloads
     private BroadcastReceiver downloadProgressReceiver;
     
     @Override
@@ -103,7 +105,11 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
                     gamesAdapter.updateGameProgress(
                         gameId,
                         intent.getLongExtra(DownloadService.EXTRA_BYTES_DOWNLOADED, 0),
-                        intent.getLongExtra(DownloadService.EXTRA_TOTAL_BYTES, 0)
+                        intent.getLongExtra(DownloadService.EXTRA_TOTAL_BYTES, 0),
+                        intent.getFloatExtra(DownloadService.EXTRA_DOWNLOAD_SPEED, 0.0f),
+                        intent.getLongExtra(DownloadService.EXTRA_ETA, 0),
+                        intent.getIntExtra(DownloadService.EXTRA_CURRENT_FILE_INDEX, 0),
+                        intent.getIntExtra(DownloadService.EXTRA_TOTAL_FILES, 0)
                     );
                 }
             }
@@ -152,18 +158,33 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
             Toast.makeText(this, "Pasta de download configurada!", Toast.LENGTH_SHORT).show();
             
             // Se havia um download pendente, iniciar agora
-            if (pendingDownloadGame != null && pendingDownloadLink != null) {
+            if (pendingDownloadGame != null) {
                 Game gameToDownload = pendingDownloadGame;
-                DownloadLink linkToDownload = pendingDownloadLink;
-                pendingDownloadGame = null;
-                pendingDownloadLink = null;
-                startGameDownload(gameToDownload, linkToDownload);
+                
+                if (pendingSelectedLinks != null && !pendingSelectedLinks.isEmpty()) {
+                    // Múltiplos downloads
+                    List<DownloadLink> linksToDownload = pendingSelectedLinks;
+                    pendingDownloadGame = null;
+                    pendingSelectedLinks = null;
+                    
+                    // Converter List para Set
+                    HashSet<DownloadLink> downloadSet = new HashSet<>(linksToDownload);
+                    startMultipleDownloads(gameToDownload, downloadSet);
+                } else if (pendingDownloadLink != null) {
+                    // Download único (compatibilidade)
+                    DownloadLink linkToDownload = pendingDownloadLink;
+                    pendingDownloadGame = null;
+                    pendingDownloadLink = null;
+                    startGameDownload(gameToDownload, linkToDownload);
+                }
             }
             
         } catch (Exception e) {
             Log.e("LibraryActivity", "Erro ao processar pasta selecionada", e);
             Toast.makeText(this, "Erro ao configurar pasta de download", Toast.LENGTH_SHORT).show();
             pendingDownloadGame = null;
+            pendingDownloadLink = null;
+            pendingSelectedLinks = null;
         }
     }
     
@@ -389,7 +410,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         } else {
             Log.d("LibraryActivity", "No avatar to load or userAvatar view not found");
             if (userAvatar != null) {
-                userAvatar.setImageResource(R.drawable.ic_account_circle);
+                userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
             }
         }
     }
@@ -514,7 +535,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         // Definir avatar padrão
         ImageView userAvatar = findViewById(R.id.userAvatar);
         if (userAvatar != null) {
-            userAvatar.setImageResource(R.drawable.ic_account_circle);
+            userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
         }
     }
     
@@ -646,37 +667,75 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_download_selection, null);
-        builder.setView(dialogView)
-               .setTitle("Select a file to download");
-
-        RecyclerView recyclerView = (RecyclerView) dialogView;
+        builder.setView(dialogView);
+        
+        // Configurar elementos do diálogo
+        TextView gameTitle = dialogView.findViewById(R.id.gameTitle);
+        TextView selectionSummary = dialogView.findViewById(R.id.selectionSummary);
+        TextView totalSizeText = dialogView.findViewById(R.id.totalSizeText);
+        Button selectAllButton = dialogView.findViewById(R.id.selectAllButton);
+        Button selectNoneButton = dialogView.findViewById(R.id.selectNoneButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        Button downloadButton = dialogView.findViewById(R.id.downloadButton);
+        RecyclerView recyclerView = dialogView.findViewById(R.id.downloadLinksRecyclerView);
+        
+        gameTitle.setText(game.getTitle());
+        
+        // Configurar RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        DownloadLinkAdapter adapter = new DownloadLinkAdapter(this, downloadLinks, selectedLink -> {
-            if (!safDownloadManager.hasDownloadLocationConfigured()) {
-                Log.d("LibraryActivity", "No download folder configured, requesting selection");
-                pendingDownloadGame = game;
-                pendingDownloadLink = selectedLink;
-                showFolderSelectionDialog();
-            } else {
-                startGameDownload(game, selectedLink);
+        
+        DownloadLinkAdapter adapter = new DownloadLinkAdapter(this, downloadLinks, selectedLinks -> {
+            // Atualizar informações de seleção
+            int selectedCount = selectedLinks.size();
+            long totalSize = 0;
+            for (DownloadLink link : selectedLinks) {
+                totalSize += link.getSize();
             }
+            
+            selectionSummary.setText(getString(R.string.files_selected, selectedCount));
+            totalSizeText.setText(getString(R.string.total_size_selected, Game.formatFileSize(totalSize)));
+            downloadButton.setEnabled(selectedCount > 0);
         });
         recyclerView.setAdapter(adapter);
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        
+        // Configurar botões de seleção
+        selectAllButton.setOnClickListener(v -> adapter.selectAll());
+        selectNoneButton.setOnClickListener(v -> adapter.selectNone());
+        
+        AlertDialog dialog = builder.create();
+        
+        // Configurar botões de ação
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
+        downloadButton.setOnClickListener(v -> {
+            Set<DownloadLink> selectedLinks = adapter.getSelectedLinks();
+            if (!selectedLinks.isEmpty()) {
+                dialog.dismiss();
+                if (!safDownloadManager.hasDownloadLocationConfigured()) {
+                    Log.d("LibraryActivity", "No download folder configured, requesting selection");
+                    pendingDownloadGame = game;
+                    // Converter Set para List para o pending download
+                    pendingSelectedLinks = new ArrayList<>(selectedLinks);
+                    showFolderSelectionDialog();
+                } else {
+                    startMultipleDownloads(game, selectedLinks);
+                }
+            }
+        });
+        
+        dialog.show();
     }
     
     private void showFolderSelectionDialog() {
         new AlertDialog.Builder(this)
-                .setTitle("Pasta de Download")
+                .setTitle(getString(R.string.download_folder))
                 .setMessage("Você precisa selecionar uma pasta onde os jogos serão salvos. Deseja escolher uma pasta agora?")
-                .setPositiveButton("Escolher Pasta", (dialog, which) -> {
+                .setPositiveButton(getString(R.string.choose_folder), (dialog, which) -> {
                     openFolderPicker();
                 })
-                .setNegativeButton("Cancelar", (dialog, which) -> {
+                .setNegativeButton(getString(R.string.cancel), (dialog, which) -> {
                     pendingDownloadGame = null;
+                    pendingDownloadLink = null;
+                    pendingSelectedLinks = null;
                 })
                 .setCancelable(false)
                 .show();
@@ -701,6 +760,8 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
             Log.e("LibraryActivity", "Erro ao abrir seletor de pasta", e);
             Toast.makeText(this, "Erro ao abrir seletor de pasta", Toast.LENGTH_SHORT).show();
             pendingDownloadGame = null;
+            pendingDownloadLink = null;
+            pendingSelectedLinks = null;
         }
     }
     
@@ -717,6 +778,29 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         gamesAdapter.updateGame(game);
         
         Toast.makeText(this, "Download started: " + game.getTitle(), Toast.LENGTH_SHORT).show();
+    }
+    
+    private void startMultipleDownloads(Game game, Set<DownloadLink> selectedLinks) {
+        Log.d("LibraryActivity", "Starting multiple downloads for: " + game.getTitle() + " - " + selectedLinks.size() + " files");
+        
+        // Criar batch de download no banco de dados
+        long batchId = databaseHelper.createDownloadBatch(game.getId(), selectedLinks.size());
+        
+        // Inserir cada download individual no banco
+        for (DownloadLink link : selectedLinks) {
+            databaseHelper.insertDownload(game.getId(), link.getId(), link.getFileName(), link.getUrl());
+        }
+        
+        // Atualizar status do jogo para DOWNLOADING
+        game.setStatus(Game.DownloadStatus.DOWNLOADING);
+        databaseHelper.updateGame(game);
+        gamesAdapter.updateGame(game);
+        
+        // Iniciar serviço de download com múltiplos arquivos
+        Intent downloadIntent = DownloadService.createMultipleDownloadIntent(this, game, new ArrayList<>(selectedLinks));
+        startForegroundService(downloadIntent);
+        
+        Toast.makeText(this, "Downloads iniciados: " + selectedLinks.size() + " arquivos de " + game.getTitle(), Toast.LENGTH_LONG).show();
     }
     
     @Override
