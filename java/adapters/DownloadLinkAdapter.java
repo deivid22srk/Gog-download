@@ -4,17 +4,18 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.gogdownloader.R;
 import com.example.gogdownloader.models.DownloadLink;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DownloadLinkAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -22,17 +23,12 @@ public class DownloadLinkAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
 
-    private Context context;
-    private List<Object> items;
-    private OnDownloadLinkSelectedListener listener;
+    private final Context context;
+    private final List<Object> items;
+    private final Set<DownloadLink> selectedLinks = new HashSet<>();
 
-    public interface OnDownloadLinkSelectedListener {
-        void onDownloadLinkSelected(DownloadLink downloadLink);
-    }
-
-    public DownloadLinkAdapter(Context context, List<DownloadLink> downloadLinks, OnDownloadLinkSelectedListener listener) {
+    public DownloadLinkAdapter(Context context, List<DownloadLink> downloadLinks) {
         this.context = context;
-        this.listener = listener;
         this.items = new ArrayList<>();
 
         // Group by type
@@ -61,7 +57,7 @@ public class DownloadLinkAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             View view = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_1, parent, false);
             return new HeaderViewHolder(view);
         } else {
-            View view = LayoutInflater.from(context).inflate(android.R.layout.simple_list_item_2, parent, false);
+            View view = LayoutInflater.from(context).inflate(R.layout.item_download_link, parent, false);
             return new ItemViewHolder(view);
         }
     }
@@ -74,15 +70,25 @@ public class DownloadLinkAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         } else {
             ItemViewHolder itemViewHolder = (ItemViewHolder) holder;
             DownloadLink downloadLink = (DownloadLink) items.get(position);
-            itemViewHolder.text1.setText(downloadLink.getName());
-            itemViewHolder.text2.setText(downloadLink.getFormattedSize());
-            itemViewHolder.itemView.setOnClickListener(v -> listener.onDownloadLinkSelected(downloadLink));
+            itemViewHolder.bind(downloadLink);
+            itemViewHolder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    selectedLinks.add(downloadLink);
+                } else {
+                    selectedLinks.remove(downloadLink);
+                }
+            });
+            itemViewHolder.checkBox.setChecked(selectedLinks.contains(downloadLink));
         }
     }
 
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    public List<DownloadLink> getSelectedLinks() {
+        return new ArrayList<>(selectedLinks);
     }
 
     static class HeaderViewHolder extends RecyclerView.ViewHolder {
@@ -95,13 +101,21 @@ public class DownloadLinkAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     }
 
     static class ItemViewHolder extends RecyclerView.ViewHolder {
-        TextView text1;
-        TextView text2;
+        CheckBox checkBox;
+        TextView nameTextView;
+        TextView sizeTextView;
 
-        ItemViewHolder(@NonNull View itemView) {
+        ItemViewHolder(View itemView) {
             super(itemView);
-            text1 = itemView.findViewById(android.R.id.text1);
-            text2 = itemView.findViewById(android.R.id.text2);
+            checkBox = itemView.findViewById(R.id.downloadCheckBox);
+            nameTextView = itemView.findViewById(R.id.downloadLinkName);
+            sizeTextView = itemView.findViewById(R.id.downloadLinkSize);
+        }
+
+        void bind(final DownloadLink downloadLink) {
+            nameTextView.setText(downloadLink.getName());
+            sizeTextView.setText(downloadLink.getFormattedSize());
+            itemView.setOnClickListener(v -> checkBox.toggle());
         }
     }
 }

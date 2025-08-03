@@ -36,6 +36,8 @@ public class Game implements Serializable {
     private List<String> genres;
     private String developer;
     private String publisher;
+    private transient long downloadSpeed; // Not persisted
+    private int downloadId = -1;
     
     public Game() {
         this.downloadLinks = new ArrayList<>();
@@ -247,6 +249,12 @@ public class Game implements Serializable {
     
     public String getPublisher() { return publisher; }
     public void setPublisher(String publisher) { this.publisher = publisher; }
+
+    public long getDownloadSpeed() { return downloadSpeed; }
+    public void setDownloadSpeed(long downloadSpeed) { this.downloadSpeed = downloadSpeed; }
+
+    public int getDownloadId() { return downloadId; }
+    public void setDownloadId(int downloadId) { this.downloadId = downloadId; }
     
     // Métodos utilitários
     public String getGenresString() {

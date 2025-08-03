@@ -54,13 +54,6 @@
             android:hardwareAccelerated="true"
             android:configChanges="orientation|screenSize|keyboardHidden" />
 
-        <!-- Serviço de Download -->
-        <service
-            android:name=".services.DownloadService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
-
     </application>
 
 </manifest>

@@ -36,7 +36,7 @@
     <string name="download_channel_name">Downloads GOG</string>
     <string name="download_channel_description">Notificações de download de jogos do GOG</string>
     <string name="downloading_game">Baixando %1$s</string>
-    <string name="download_progress">%1$d%% - %2$s</string>
+    <string name="download_progress">%1$d%% - %2$s (%3$s)</string>
     <string name="download_complete">Download completo: %1$s</string>
     <string name="download_failed">Falha no download: %1$s</string>
     <string name="download_cancelled">Download cancelado: %1$s</string>

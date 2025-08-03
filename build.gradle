@@ -33,6 +33,14 @@ android {
     }
 }
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
@@ -56,4 +64,8 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    // Fetch Downloader
+    implementation "com.github.tonyofrancis.Fetch:fetch2:3.4.1"
+    implementation "com.github.tonyofrancis.Fetch:fetch2okhttp:3.4.1"
 }

@@ -67,16 +67,26 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
         }
     }
 
-    public void updateGameProgress(long gameId, long bytesDownloaded, long totalBytes) {
+    public void updateGameProgress(int downloadId, long bytesDownloaded, long totalBytes, long speed) {
         for (int i = 0; i < filteredGames.size(); i++) {
             Game game = filteredGames.get(i);
-            if (game.getId() == gameId) {
+            if (game.getDownloadId() == downloadId) {
                 game.setDownloadProgress(bytesDownloaded);
                 game.setTotalSize(totalBytes);
+                game.setDownloadSpeed(speed);
                 notifyItemChanged(i);
                 break;
             }
         }
+    }
+
+    public Game findGameByDownloadId(int downloadId) {
+        for (Game game : games) {
+            if (game.getDownloadId() == downloadId) {
+                return game;
+            }
+        }
+        return null;
     }
     
     public void filter(String query) {
@@ -228,8 +238,10 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             
             int progress = game.getDownloadProgressPercent();
             downloadProgressBar.setProgress(progress);
+
+            String speedString = Game.formatFileSize(game.getDownloadSpeed()) + "/s";
             downloadProgressText.setText(
-                context.getString(R.string.download_progress, progress, game.getFormattedSize())
+                context.getString(R.string.download_progress, progress, game.getFormattedSize(), speedString)
             );
             
             actionButton.setText(context.getString(R.string.cancel));
