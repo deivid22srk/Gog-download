@@ -390,6 +390,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         
         return downloads;
     }
+
+    public ContentValues getDownload(long downloadId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        ContentValues values = null;
+
+        Cursor cursor = db.query(TABLE_DOWNLOADS, null,
+                COLUMN_DOWNLOAD_ID + " = ?", new String[]{String.valueOf(downloadId)},
+                null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            values = new ContentValues();
+            values.put(COLUMN_DOWNLOAD_ID, cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_ID)));
+            values.put(COLUMN_DOWNLOAD_GAME_ID, cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_GAME_ID)));
+            values.put(COLUMN_DOWNLOAD_LINK_ID, cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_LINK_ID)));
+            values.put(COLUMN_DOWNLOAD_FILE_NAME, cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_FILE_NAME)));
+            values.put(COLUMN_DOWNLOAD_URL, cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_URL)));
+            values.put(COLUMN_DOWNLOAD_FILE_PATH, cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_FILE_PATH)));
+            values.put(COLUMN_DOWNLOAD_STATUS, cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_STATUS)));
+            values.put(COLUMN_DOWNLOAD_PROGRESS, cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_PROGRESS)));
+            values.put(COLUMN_DOWNLOAD_TOTAL_BYTES, cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_TOTAL_BYTES)));
+            values.put(COLUMN_DOWNLOAD_DOWNLOADED_BYTES, cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_DOWNLOAD_DOWNLOADED_BYTES)));
+            cursor.close();
+        }
+
+        return values;
+    }
     
     public List<ContentValues> getDownloadsForGame(long gameId) {
         List<ContentValues> downloads = new ArrayList<>();

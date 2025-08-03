@@ -96,7 +96,7 @@ public class SAFDownloadManager {
     /**
      * Cria arquivo para download
      */
-    public DocumentFile createDownloadFile(Game game, DownloadLink downloadLink) {
+    public DocumentFile createDownloadFile(Game game, DownloadLink downloadLink, boolean isResume) {
         DocumentFile gameDir = createGameDirectory(game);
         if (gameDir == null) {
             return null;
@@ -110,8 +110,13 @@ public class SAFDownloadManager {
         // Verificar se arquivo já existe
         DocumentFile existingFile = gameDir.findFile(fileName);
         if (existingFile != null) {
-            Log.d(TAG, "File already exists, deleting: " + fileName);
-            existingFile.delete();
+            if (isResume) {
+                Log.d(TAG, "File already exists, resuming: " + fileName);
+                return existingFile;
+            } else {
+                Log.d(TAG, "File already exists, deleting: " + fileName);
+                existingFile.delete();
+            }
         }
         
         // Determinar MIME type
@@ -131,12 +136,12 @@ public class SAFDownloadManager {
     /**
      * Obtém OutputStream para escrita no arquivo
      */
-    public OutputStream getOutputStream(DocumentFile file) throws IOException {
+    public OutputStream getOutputStream(DocumentFile file, boolean append) throws IOException {
         if (file == null || !file.canWrite()) {
             throw new IOException("Cannot write to file");
         }
         
-        return context.getContentResolver().openOutputStream(file.getUri());
+        return context.getContentResolver().openOutputStream(file.getUri(), append ? "wa" : "w");
     }
     
     /**

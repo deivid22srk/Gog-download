@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHolder> {
+
+    private static final String PAYLOAD_PROGRESS_UPDATE = "PAYLOAD_PROGRESS_UPDATE";
     
     private Context context;
     private List<Game> games;
@@ -29,6 +31,8 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
     
     public interface OnGameActionListener {
         void onDownloadGame(Game game);
+        void onPauseDownload(Game game);
+        void onResumeDownload(Game game);
         void onCancelDownload(Game game);
         void onOpenGame(Game game);
         void onGameClick(Game game);
@@ -85,7 +89,7 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
                 game.setCurrentFileIndex(currentFileIndex);
                 game.setTotalFiles(totalFiles);
                 
-                notifyItemChanged(i);
+                notifyItemChanged(i, PAYLOAD_PROGRESS_UPDATE);
                 break;
             }
         }
@@ -122,6 +126,20 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
         Game game = filteredGames.get(position);
         holder.bind(game);
     }
+
+    @Override
+    public void onBindViewHolder(@NonNull GameViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads);
+        } else {
+            for (Object payload : payloads) {
+                if (payload.equals(PAYLOAD_PROGRESS_UPDATE)) {
+                    Game game = filteredGames.get(position);
+                    holder.updateProgressViews(game);
+                }
+            }
+        }
+    }
     
     @Override
     public int getItemCount() {
@@ -139,7 +157,7 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
         private ProgressBar downloadProgressBar;
         private TextView downloadProgressText;
         private Button actionButton;
-        private ImageView statusIcon;
+        private Button cancelButton;
         
         public GameViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -153,12 +171,19 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             downloadProgressBar = itemView.findViewById(R.id.downloadProgressBar);
             downloadProgressText = itemView.findViewById(R.id.downloadProgressText);
             actionButton = itemView.findViewById(R.id.actionButton);
-            statusIcon = itemView.findViewById(R.id.statusIcon);
+            cancelButton = itemView.findViewById(R.id.cancelButton);
             
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION && listener != null) {
                     listener.onGameClick(filteredGames.get(position));
+                }
+            });
+
+            cancelButton.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && listener != null) {
+                    listener.onCancelDownload(filteredGames.get(position));
                 }
             });
         }
@@ -211,15 +236,15 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
                 case NOT_DOWNLOADED:
                     showNotDownloadedState();
                     break;
-                    
+                case PAUSED:
+                    showPausedState(game);
+                    break;
                 case DOWNLOADING:
                     showDownloadingState(game);
                     break;
-                    
                 case DOWNLOADED:
                     showDownloadedState();
                     break;
-                    
                 case FAILED:
                     showFailedState();
                     break;
@@ -228,15 +253,24 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
         
         private void showNotDownloadedState() {
             downloadProgressLayout.setVisibility(View.GONE);
-            statusIcon.setVisibility(View.GONE);
-            
+            cancelButton.setVisibility(View.GONE);
             actionButton.setText(context.getString(R.string.download));
+            actionButton.setEnabled(true);
+        }
+
+        private void showPausedState(Game game) {
+            downloadProgressLayout.setVisibility(View.VISIBLE);
+            cancelButton.setVisibility(View.VISIBLE);
+            int progress = game.getDownloadProgressPercent();
+            downloadProgressBar.setProgress(progress);
+            downloadProgressText.setText(context.getString(R.string.paused));
+            actionButton.setText(context.getString(R.string.resume));
             actionButton.setEnabled(true);
         }
         
         private void showDownloadingState(Game game) {
             downloadProgressLayout.setVisibility(View.VISIBLE);
-            statusIcon.setVisibility(View.GONE);
+            cancelButton.setVisibility(View.VISIBLE);
             
             int progress = game.getDownloadProgressPercent();
             downloadProgressBar.setProgress(progress);
@@ -245,18 +279,15 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             StringBuilder progressText = new StringBuilder();
             progressText.append(context.getString(R.string.download_progress, progress, game.getFormattedSize()));
             
-            // Adicionar velocidade e ETA se disponíveis
             if (game.getDownloadSpeed() > 0) {
                 progressText.append("\n");
                 progressText.append(context.getString(R.string.download_speed, game.getFormattedDownloadSpeed()));
-                
                 if (game.getEta() > 0) {
                     progressText.append(" • ");
                     progressText.append(context.getString(R.string.download_eta, game.getFormattedEta()));
                 }
             }
             
-            // Adicionar informação de múltiplos arquivos se aplicável
             if (game.getTotalFiles() > 1) {
                 progressText.append("\n");
                 progressText.append(game.getFileProgressText());
@@ -264,24 +295,20 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             
             downloadProgressText.setText(progressText.toString());
             
-            actionButton.setText(context.getString(R.string.cancel));
+            actionButton.setText(context.getString(R.string.pause));
             actionButton.setEnabled(true);
         }
         
         private void showDownloadedState() {
             downloadProgressLayout.setVisibility(View.GONE);
-            statusIcon.setVisibility(View.VISIBLE);
-            statusIcon.setImageResource(android.R.drawable.ic_dialog_info);
-            
+            cancelButton.setVisibility(View.GONE);
             actionButton.setText(context.getString(R.string.downloaded));
             actionButton.setEnabled(false);
         }
         
         private void showFailedState() {
             downloadProgressLayout.setVisibility(View.GONE);
-            statusIcon.setVisibility(View.VISIBLE);
-            statusIcon.setImageResource(android.R.drawable.ic_dialog_alert);
-            
+            cancelButton.setVisibility(View.GONE);
             actionButton.setText(context.getString(R.string.retry));
             actionButton.setEnabled(true);
         }
@@ -294,14 +321,21 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
                 case FAILED:
                     listener.onDownloadGame(game);
                     break;
-                    
-                case DOWNLOADING:
-                    listener.onCancelDownload(game);
+                case PAUSED:
+                    listener.onResumeDownload(game);
                     break;
-                    
+                case DOWNLOADING:
+                    listener.onPauseDownload(game);
+                    break;
                 case DOWNLOADED:
                     listener.onOpenGame(game);
                     break;
+            }
+        }
+
+        public void updateProgressViews(Game game) {
+            if (game.getStatus() == Game.DownloadStatus.DOWNLOADING) {
+                showDownloadingState(game);
             }
         }
     }

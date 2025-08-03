@@ -85,9 +85,18 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_library);
         
+        initializeManagers(); // Initialize managers first to access preferences
+
+        // Check if folders are selected
+        if (!preferencesManager.hasDownloadLocationConfigured() || preferencesManager.getInstallUri() == null) {
+            Intent intent = new Intent(this, FolderSelectionActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         setupFolderPickerLauncher();
         initializeViews();
-        initializeManagers();
         setupToolbar();
         setupRecyclerView();
         setupClickListeners();
@@ -803,6 +812,18 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         Toast.makeText(this, "Downloads iniciados: " + selectedLinks.size() + " arquivos de " + game.getTitle(), Toast.LENGTH_LONG).show();
     }
     
+    @Override
+    public void onPauseDownload(Game game) {
+        Intent pauseIntent = DownloadService.createPauseIntent(this, game.getId());
+        startService(pauseIntent);
+    }
+
+    @Override
+    public void onResumeDownload(Game game) {
+        Intent resumeIntent = DownloadService.createResumeIntent(this, game.getId());
+        startService(resumeIntent);
+    }
+
     @Override
     public void onCancelDownload(Game game) {
         // Cancelar download

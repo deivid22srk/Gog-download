@@ -22,6 +22,9 @@
     <string name="download">Download</string>
     <string name="downloading">Baixando...</string>
     <string name="downloaded">Baixado</string>
+    <string name="pause">Pausar</string>
+    <string name="resume">Retomar</string>
+    <string name="paused">Pausado</string>
     
     <!-- Settings Activity -->
     <string name="settings_title">Configurações</string>

@@ -56,6 +56,8 @@ public class DownloadService extends Service {
     public static final String ACTION_DOWNLOAD_PROGRESS = "com.example.gogdownloader.DOWNLOAD_PROGRESS";
     private static final String ACTION_DOWNLOAD = "com.example.gogdownloader.DOWNLOAD";
     private static final String ACTION_DOWNLOAD_MULTIPLE = "com.example.gogdownloader.DOWNLOAD_MULTIPLE";
+    private static final String ACTION_PAUSE = "com.example.gogdownloader.PAUSE";
+    private static final String ACTION_RESUME = "com.example.gogdownloader.RESUME";
     private static final String ACTION_RESUME_DOWNLOADS = "com.example.gogdownloader.RESUME_DOWNLOADS";
     private static final String ACTION_CANCEL = "com.example.gogdownloader.CANCEL";
     private static final String ACTION_STOP_SERVICE = "com.example.gogdownloader.STOP_SERVICE";
@@ -106,6 +108,20 @@ public class DownloadService extends Service {
     public static Intent createCancelIntent(Context context, long gameId) {
         Intent intent = new Intent(context, DownloadService.class);
         intent.setAction(ACTION_CANCEL);
+        intent.putExtra(EXTRA_GAME_ID, gameId);
+        return intent;
+    }
+
+    public static Intent createPauseIntent(Context context, long gameId) {
+        Intent intent = new Intent(context, DownloadService.class);
+        intent.setAction(ACTION_PAUSE);
+        intent.putExtra(EXTRA_GAME_ID, gameId);
+        return intent;
+    }
+
+    public static Intent createResumeIntent(Context context, long gameId) {
+        Intent intent = new Intent(context, DownloadService.class);
+        intent.setAction(ACTION_RESUME);
         intent.putExtra(EXTRA_GAME_ID, gameId);
         return intent;
     }
@@ -167,6 +183,16 @@ public class DownloadService extends Service {
         } else if (ACTION_RESUME_DOWNLOADS.equals(action)) {
             Log.d(TAG, "Received RESUME_DOWNLOADS action");
             // Não fazer nada aqui, o resumePendingDownloads() já foi chamado no onCreate
+        } else if (ACTION_PAUSE.equals(action)) {
+            long gameId = intent.getLongExtra(EXTRA_GAME_ID, -1);
+            if (gameId != -1) {
+                pauseDownload(gameId);
+            }
+        } else if (ACTION_RESUME.equals(action)) {
+            long gameId = intent.getLongExtra(EXTRA_GAME_ID, -1);
+            if (gameId != -1) {
+                resumeDownload(gameId);
+            }
         } else if (ACTION_CANCEL.equals(action)) {
             long gameId = intent.getLongExtra(EXTRA_GAME_ID, -1);
             if (gameId != -1) {
@@ -229,26 +255,51 @@ public class DownloadService extends Service {
     
     private void startDownload(Game game, DownloadLink downloadLink) {
         Log.d(TAG, "Starting download for game: " + game.getTitle());
-        
-        // Check if already downloading
+
         if (activeDownloads.containsKey(game.getId())) {
             Log.w(TAG, "Game is already being downloaded: " + game.getTitle());
             return;
         }
-        
-        // Update status in db
+
+        // Insert a record for this download and get its ID
+        long downloadId = databaseHelper.insertDownload(
+                game.getId(),
+                downloadLink.getId(),
+                downloadLink.getFileName(),
+                downloadLink.getUrl()
+        );
+
+        if (downloadId == -1) {
+            onDownloadError(game, "Failed to create download record in database.");
+            return;
+        }
+
+        // Update game status
         game.setStatus(Game.DownloadStatus.DOWNLOADING);
         databaseHelper.updateGame(game);
-        
+
         // Create initial notification
         showDownloadNotification(game, 0, "Starting download...");
-        
-        // Start as foreground service
         startForeground(NOTIFICATION_ID + (int) game.getId(),
                 createDownloadNotification(game, 0, "Starting download..."));
-        
-        // Start the file download directly
-        startFileDownload(game, downloadLink);
+
+        // Get the real download URL and then start the task
+        libraryManager.getDownloadLink(game.getId(), downloadLink, "installer",
+                new GOGLibraryManager.DownloadLinkCallback() {
+            @Override
+            public void onSuccess(String downloadUrl) {
+                downloadLink.setDownloadUrl(downloadUrl);
+                DownloadTask task = new DownloadTask(game, downloadLink, downloadId);
+                activeDownloads.put(game.getId(), task);
+                executorService.execute(task);
+            }
+
+            @Override
+            public void onError(String error) {
+                onDownloadError(game, "Failed to get download URL: " + error);
+                databaseHelper.updateDownloadStatus(downloadId, "FAILED", error);
+            }
+        });
     }
     
     private void startBatchDownload(Game game, List<DownloadLink> downloadLinks) {
@@ -335,21 +386,13 @@ public class DownloadService extends Service {
             String linkId = downloadData.getAsString("link_id");
             String fileName = downloadData.getAsString("file_name");
             String downloadUrl = downloadData.getAsString("download_url");
-            
-            // Criar DownloadLink a partir dos dados salvos
+
             DownloadLink downloadLink = new DownloadLink();
             downloadLink.setId(linkId);
             downloadLink.setName(fileName);
             downloadLink.setDownloadUrl(downloadUrl);
             
             Log.d(TAG, "Resuming single download: " + game.getTitle() + " - " + fileName);
-            
-            // Verificar se o arquivo parcial existe
-            long downloadedBytes = downloadData.getAsLong("downloaded_bytes");
-            if (downloadedBytes > 0) {
-                Log.d(TAG, "Found partial download: " + downloadedBytes + " bytes");
-                // TODO: Implementar resume com Range header
-            }
             
             startDownload(game, downloadLink);
             
@@ -383,30 +426,32 @@ public class DownloadService extends Service {
             Log.e(TAG, "Error resuming batch download for game: " + game.getTitle(), e);
         }
     }
-    
-    private void startFileDownload(Game game, DownloadLink downloadLink) {
-        // Obter URL de download real
-        libraryManager.getDownloadLink(game.getId(), downloadLink, "installer",
-                new GOGLibraryManager.DownloadLinkCallback() {
-            @Override
-            public void onSuccess(String downloadUrl) {
-                downloadLink.setDownloadUrl(downloadUrl);
-                
-                // Criar tarefa de download
-                DownloadTask task = new DownloadTask(game, downloadLink);
-                activeDownloads.put(game.getId(), task);
-                
-                // Executar download
-                executorService.execute(task);
-            }
-            
-            @Override
-            public void onError(String error) {
-                onDownloadError(game, "Erro ao obter URL de download: " + error);
-            }
-        });
+
+    private void pauseDownload(long gameId) {
+        Log.d(TAG, "Pausing download for game ID: " + gameId);
+        DownloadTask task = activeDownloads.get(gameId);
+        if (task != null) {
+            task.pause();
+        }
     }
-    
+
+    private void resumeDownload(long gameId) {
+        Log.d(TAG, "Resuming download for game ID: " + gameId);
+        Game game = databaseHelper.getGame(gameId);
+        if (game != null) {
+            // To resume, we essentially just start the download again.
+            // The service will pick up the persisted progress.
+            ContentValues downloadData = databaseHelper.getDownload(gameId);
+            if (downloadData != null) {
+                DownloadLink link = new DownloadLink();
+                link.setId(downloadData.getAsString("link_id"));
+                link.setName(downloadData.getAsString("file_name"));
+                link.setUrl(downloadData.getAsString("download_url"));
+                startDownload(game, link);
+            }
+        }
+    }
+
     private void cancelDownload(long gameId) {
         Log.d(TAG, "Cancelling download for game ID: " + gameId);
         
@@ -433,7 +478,7 @@ public class DownloadService extends Service {
             }
             
             // Remover notificação
-            notificationManager.cancel(NOTIFICATION_ID + (int) gameId);
+            notificationManager.cancel(NOTIFICATION_ID + (int) game.getId());
             
             // Parar foreground se não há mais downloads
             if (activeDownloads.isEmpty() && activeBatchDownloads.isEmpty()) {
@@ -500,7 +545,7 @@ public class DownloadService extends Service {
         intent.putExtra(EXTRA_TOTAL_BYTES, totalBytes);
         intent.putExtra(EXTRA_CURRENT_FILE_INDEX, currentFileIndex);
         intent.putExtra(EXTRA_TOTAL_FILES, totalFiles);
-        intent.putExtra(EXTRA_DOWNLOAD_SPEED, speed);
+        intent.putExtra(EXTRA_DOWNLOAD_SPEED, (float)speed);
         intent.putExtra(EXTRA_ETA, eta);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
@@ -517,13 +562,14 @@ public class DownloadService extends Service {
         }
     }
     
-    private void onDownloadComplete(Game game, String filePath) {
+    private void onDownloadComplete(Game game, long downloadId, String filePath) {
         Log.d(TAG, "Download completed for game: " + game.getTitle());
         
         // Atualizar status no banco
         game.setStatus(Game.DownloadStatus.DOWNLOADED);
         game.setLocalPath(filePath);
         databaseHelper.updateGame(game);
+        databaseHelper.updateDownloadStatus(downloadId, "COMPLETED", null);
         
         // Remover da lista de downloads ativos
         activeDownloads.remove(game.getId());
@@ -649,26 +695,39 @@ public class DownloadService extends Service {
     private class DownloadTask implements Runnable {
         private Game game;
         private DownloadLink downloadLink;
+        private long downloadId;
         private volatile boolean cancelled = false;
+        private volatile boolean paused = false;
         private SpeedMeter speedMeter = new SpeedMeter();
         
-        public DownloadTask(Game game, DownloadLink downloadLink) {
+        public DownloadTask(Game game, DownloadLink downloadLink, long downloadId) {
             this.game = game;
             this.downloadLink = downloadLink;
+            this.downloadId = downloadId;
         }
         
         public void cancel() {
             cancelled = true;
         }
+
+        public void pause() {
+            paused = true;
+        }
         
         @Override
         public void run() {
+            databaseHelper.updateDownloadStatus(downloadId, "DOWNLOADING", null);
             try {
                 downloadFile();
             } catch (Exception e) {
-                if (!cancelled) {
+                if (!cancelled && !paused) {
                     Log.e(TAG, "Download error", e);
                     onDownloadError(game, e.getMessage());
+                    databaseHelper.updateDownloadStatus(downloadId, "FAILED", e.getMessage());
+                } else if (paused) {
+                    databaseHelper.updateDownloadStatus(downloadId, "PAUSED", null);
+                } else {
+                    databaseHelper.updateDownloadStatus(downloadId, "CANCELLED", null);
                 }
             }
         }
@@ -693,8 +752,12 @@ public class DownloadService extends Service {
         private void downloadFileUsingSAF() throws IOException {
             Log.d(TAG, "Using SAF for download: " + game.getTitle());
             
+            // Check for existing progress to determine if it's a resume
+            ContentValues downloadData = databaseHelper.getDownload(downloadId);
+            boolean isResume = (downloadData != null && downloadData.getAsLong("downloaded_bytes") > 0);
+
             // Criar arquivo usando SAF
-            DocumentFile downloadFile = safDownloadManager.createDownloadFile(game, downloadLink);
+            DocumentFile downloadFile = safDownloadManager.createDownloadFile(game, downloadLink, isResume);
             if (downloadFile == null) {
                 throw new IOException("Não foi possível criar arquivo de download");
             }
@@ -725,8 +788,15 @@ public class DownloadService extends Service {
         private void realDownloadSAF(DocumentFile outputFile) throws IOException {
             String downloadUrl = downloadLink.getDownloadUrl();
             Log.d(TAG, "Starting real SAF download from: " + downloadUrl);
-            
-            Request request = new Request.Builder()
+
+            // Check for existing progress
+            ContentValues downloadData = databaseHelper.getDownload(downloadId);
+            long downloadedBytes = 0;
+            if (downloadData != null) {
+                downloadedBytes = downloadData.getAsLong("downloaded_bytes");
+            }
+
+            Request.Builder requestBuilder = new Request.Builder()
                     .url(downloadUrl)
                     .get()
                     .addHeader("User-Agent", "Mozilla/5.0 (Android 10; Mobile; rv:91.0) Gecko/91.0 Firefox/91.0")
@@ -735,66 +805,73 @@ public class DownloadService extends Service {
                     .addHeader("Accept-Encoding", "gzip, deflate")
                     .addHeader("DNT", "1")
                     .addHeader("Connection", "keep-alive")
-                    .addHeader("Referer", "https://www.gog.com/")
-                    .build();
+                    .addHeader("Referer", "https://www.gog.com/");
+
+            if (downloadedBytes > 0) {
+                Log.d(TAG, "Resuming download from " + downloadedBytes + " bytes.");
+                requestBuilder.addHeader("Range", "bytes=" + downloadedBytes + "-");
+            }
+
+            Request request = requestBuilder.build();
             
             try (Response response = httpClient.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
+                if (!response.isSuccessful() && response.code() != 206) { // 206 Partial Content is OK
                     throw new IOException("HTTP Error: " + response.code() + " - " + response.message());
                 }
                 
                 long totalBytes = response.body().contentLength();
                 if (totalBytes <= 0) {
                     totalBytes = downloadLink.getSize();
+                } else {
+                    totalBytes += downloadedBytes; // Add the already downloaded bytes to the total
                 }
                 
                 Log.d(TAG, "Content-Length: " + totalBytes + " bytes");
                 
                 try (InputStream inputStream = response.body().byteStream();
-                     OutputStream outputStream = safDownloadManager.getOutputStream(outputFile)) {
+                     OutputStream outputStream = safDownloadManager.getOutputStream(outputFile, downloadedBytes > 0)) {
                     
-                    long bytesDownloaded = 0;
                     byte[] buffer = new byte[65536]; // 64KB buffer para melhor performance
                     int bytesRead;
                     
                     long lastProgressUpdate = System.currentTimeMillis();
                     speedMeter.reset(); // Reset do medidor
                     
-                    while ((bytesRead = inputStream.read(buffer)) != -1 && !cancelled) {
+                    while ((bytesRead = inputStream.read(buffer)) != -1 && !cancelled && !paused) {
                         outputStream.write(buffer, 0, bytesRead);
-                        bytesDownloaded += bytesRead;
+                        downloadedBytes += bytesRead;
                         
                         // Atualizar progresso e velocidade
                         long currentTime = System.currentTimeMillis();
-                        if (currentTime - lastProgressUpdate > 250) {
-                            double speed = speedMeter.updateSpeed(bytesDownloaded);
-                            long eta = speedMeter.calculateETA(bytesDownloaded, totalBytes);
-                            onDownloadProgress(game, bytesDownloaded, totalBytes, 0, 0, speed, eta);
+                        if (currentTime - lastProgressUpdate > 1000) { // Update every second
+                            double speed = speedMeter.updateSpeed(downloadedBytes);
+                            long eta = speedMeter.calculateETA(downloadedBytes, totalBytes);
+                            onDownloadProgress(game, downloadedBytes, totalBytes, 0, 0, speed, eta);
+                            databaseHelper.updateDownloadProgress(downloadId, downloadedBytes, totalBytes, speed, eta);
                             lastProgressUpdate = currentTime;
                         }
-                        
-                        // Verificar se foi cancelado
-                        if (cancelled) {
-                            outputFile.delete();
-                            return;
-                        }
                     }
-                    
-                    // Flush final
-                    outputStream.flush();
+
+                    if (paused) {
+                        // Don't delete the file on pause
+                        return;
+                    }
                     
                     if (cancelled) {
                         outputFile.delete();
                         return;
                     }
                     
+                    // Flush final
+                    outputStream.flush();
+
                     // Progresso final
-                    onDownloadProgress(game, bytesDownloaded, bytesDownloaded);
+                    onDownloadProgress(game, downloadedBytes, totalBytes);
                     
                     // Download completo
                     String filePath = outputFile.getUri().toString();
-                    Log.d(TAG, "SAF download completed: " + filePath + " (" + bytesDownloaded + " bytes)");
-                    onDownloadComplete(game, filePath);
+                    Log.d(TAG, "SAF download completed: " + filePath + " (" + downloadedBytes + " bytes)");
+                    onDownloadComplete(game, downloadId, filePath);
                     
                 } catch (IOException e) {
                     // Deletar arquivo em caso de erro
@@ -877,7 +954,7 @@ public class DownloadService extends Service {
                     
                     // Download completo
                     Log.d(TAG, "Legacy download completed: " + outputFile.getAbsolutePath() + " (" + bytesDownloaded + " bytes)");
-                    onDownloadComplete(game, outputFile.getAbsolutePath());
+                    onDownloadComplete(game, downloadId, outputFile.getAbsolutePath());
                     
                 } catch (IOException e) {
                     // Deletar arquivo em caso de erro
@@ -1011,7 +1088,7 @@ public class DownloadService extends Service {
                     databaseHelper.updateBatchProgress(batchId, downloadLinks.size(), "COMPLETED");
                 }
                 
-                onDownloadComplete(game, "Batch download completed");
+                onDownloadComplete(game, -1, "Batch download completed");
             }
         }
         
@@ -1023,7 +1100,7 @@ public class DownloadService extends Service {
             
             // Criar arquivo usando SAF
             if (safDownloadManager.hasDownloadLocationConfigured()) {
-                outputFile = safDownloadManager.createDownloadFile(game, downloadLink);
+                outputFile = safDownloadManager.createDownloadFile(game, downloadLink, false);
                 if (outputFile == null) {
                     throw new IOException("Não foi possível criar arquivo de download");
                 }
@@ -1054,7 +1131,7 @@ public class DownloadService extends Service {
                 }
                 
                 try (InputStream inputStream = response.body().byteStream();
-                     OutputStream outputStream = safDownloadManager.getOutputStream(outputFile)) {
+                     OutputStream outputStream = safDownloadManager.getOutputStream(outputFile, false)) {
                     
                     long fileBytesDownloaded = 0;
                     byte[] buffer = new byte[65536]; // 64KB buffer para melhor performance

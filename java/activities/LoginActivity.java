@@ -313,7 +313,7 @@ public class LoginActivity extends BaseActivity {
     }
     
     private void navigateToLibrary() {
-        Intent intent = new Intent(this, LibraryActivity.class);
+        Intent intent = new Intent(this, FolderSelectionActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
