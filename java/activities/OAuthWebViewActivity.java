@@ -24,7 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.gogdownloader.R;
 
-public class OAuthWebViewActivity extends AppCompatActivity {
+public class OAuthWebViewActivity extends BaseActivity {
     
     private static final String TAG = "OAuthWebViewActivity";
     

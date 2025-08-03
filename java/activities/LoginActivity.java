@@ -24,7 +24,7 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONObject;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
     
     private static final String TAG = "LoginActivity";
     private static final int OAUTH_REQUEST_CODE = 1001;

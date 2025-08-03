@@ -1,19 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-  <!-- Base application theme for dark theme compatible with Material 1.10 -->
+  <!-- Dark theme for Android 12+ with programmatic Dynamic Color support -->
   <style name="Theme.GOGDownloader" parent="Theme.Material3.DayNight.NoActionBar">
-    <!-- Custom Material You implementation for Material 1.10 - Dark Mode -->
+    <!-- Base Material You dark theme - Dynamic Color applied programmatically -->
     
-    <!-- Primary colors - will be overridden by Dynamic Color -->
+    <!-- Base colors - will be replaced by Dynamic Color when available -->
     <item name="colorPrimary">@color/material_primary_dark</item>
     <item name="colorPrimaryVariant">@color/material_primary</item>
     <item name="colorOnPrimary">@android:color/black</item>
     
-    <!-- Secondary colors -->
     <item name="colorSecondary">@color/material_secondary_dark</item>
     <item name="colorSecondaryVariant">@color/material_secondary</item>
     <item name="colorOnSecondary">@android:color/black</item>
     
-    <!-- Background colors -->
     <item name="android:colorBackground">@color/material_background_dark</item>
     <item name="colorSurface">@color/material_surface_dark</item>
     <item name="colorOnSurface">@android:color/white</item>
@@ -21,12 +20,16 @@
     <!-- Status bar and navigation bar styling for dark theme -->
     <item name="android:statusBarColor">@android:color/transparent</item>
     <item name="android:navigationBarColor">@android:color/transparent</item>
-    <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
-    <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    <item name="android:windowLightStatusBar">false</item>
+    <item name="android:windowLightNavigationBar">false</item>
     
     <!-- Enable edge-to-edge experience -->
     <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-    <item name="android:enforceStatusBarContrast" tools:targetApi="q">false</item>
-    <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+    <item name="android:enforceStatusBarContrast">false</item>
+    <item name="android:enforceNavigationBarContrast">false</item>
+    
+    <!-- Enhanced Android 12+ features for dark mode -->
+    <item name="android:windowSplashScreenBackground">?attr/colorSurface</item>
+    <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
   </style>
 </resources>

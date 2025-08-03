@@ -30,6 +30,7 @@ import com.example.gogdownloader.models.Game;
 import com.example.gogdownloader.services.DownloadService;
 import com.example.gogdownloader.utils.ImageLoader;
 import com.example.gogdownloader.utils.SAFDownloadManager;
+import com.example.gogdownloader.utils.DynamicColorTester;
 import com.example.gogdownloader.utils.PreferencesManager;
 import com.example.gogdownloader.utils.PermissionHelper;
 import android.widget.Toast;
@@ -50,7 +51,7 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class LibraryActivity extends AppCompatActivity implements GamesAdapter.OnGameActionListener {
+public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGameActionListener {
     
     private static final int SETTINGS_REQUEST_CODE = 100;
     
@@ -90,6 +91,9 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         setupClickListeners();
         checkPermissions();
         loadLibrary();
+        
+        // Test Dynamic Color implementation with Material 1.10
+        testDynamicColorCompatibility();
 
         downloadProgressReceiver = new BroadcastReceiver() {
             @Override
@@ -788,6 +792,25 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         builder.setMessage(details.toString());
         builder.setPositiveButton("OK", null);
         builder.show();
+    }
+    
+    /**
+     * Tests Dynamic Color compatibility with Material 1.10
+     */
+    private void testDynamicColorCompatibility() {
+        // Run compatibility test in background to avoid blocking UI
+        new Thread(() -> {
+            try {
+                DynamicColorTester.testDynamicColorImplementation(this);
+                
+                boolean isCompatible = DynamicColorTester.isCompatibilityOk(this);
+                Log.d("LibraryActivity", "Dynamic Color Material 1.10 Compatibility: " + 
+                    (isCompatible ? "✅ WORKING" : "❌ ISSUES DETECTED"));
+                    
+            } catch (Exception e) {
+                Log.e("LibraryActivity", "Error testing Dynamic Color compatibility", e);
+            }
+        }).start();
     }
     
     @Override

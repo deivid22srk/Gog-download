@@ -25,7 +25,7 @@ import com.example.gogdownloader.utils.SAFDownloadManager;
 
 import java.io.File;
 
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseActivity {
     
     private TextView userEmailText;
     private TextView appVersionText;

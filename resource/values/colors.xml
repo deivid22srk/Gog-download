@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Legacy colors - kept for compatibility -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -7,4 +8,31 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Material You fallback colors for devices without Dynamic Color support -->
+    <!-- These will be used on Android < 12 -->
+    <color name="material_primary">#6750A4</color>
+    <color name="material_primary_dark">#7F39FB</color>
+    <color name="material_secondary">#625B71</color>
+    <color name="material_secondary_dark">#7D5260</color>
+    <color name="material_tertiary">#7D5260</color>
+    <color name="material_tertiary_dark">#CFBCFF</color>
+    
+    <!-- Surface colors -->
+    <color name="material_surface">#FFFBFE</color>
+    <color name="material_surface_dark">#1C1B1F</color>
+    <color name="material_surface_variant">#E7E0EC</color>
+    <color name="material_surface_variant_dark">#49454F</color>
+    
+    <!-- Background colors -->
+    <color name="material_background">#FFFBFE</color>
+    <color name="material_background_dark">#1C1B1F</color>
+    
+    <!-- Outline colors -->
+    <color name="material_outline">#79747E</color>
+    <color name="material_outline_dark">#938F99</color>
+    
+    <!-- Error colors -->
+    <color name="material_error">#BA1A1A</color>
+    <color name="material_error_dark">#F2B8B5</color>
 </resources>
