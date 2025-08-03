@@ -12,6 +12,7 @@ import com.example.gogdownloader.models.Game;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * Gerenciador de downloads usando Storage Access Framework (SAF)
