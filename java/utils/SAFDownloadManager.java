@@ -109,9 +109,9 @@ public class SAFDownloadManager {
         
         // Verificar se arquivo já existe
         DocumentFile existingFile = gameDir.findFile(fileName);
-        if (existingFile != null) {
-            Log.d(TAG, "File already exists, deleting: " + fileName);
-            existingFile.delete();
+        if (existingFile != null && existingFile.isFile()) {
+            Log.d(TAG, "File already exists, returning for resume: " + fileName);
+            return existingFile;
         }
         
         // Determinar MIME type
@@ -120,7 +120,7 @@ public class SAFDownloadManager {
         // Criar novo arquivo
         DocumentFile file = gameDir.createFile(mimeType, fileName);
         if (file != null) {
-            Log.d(TAG, "Created download file: " + fileName);
+            Log.d(TAG, "Created new download file: " + fileName);
             return file;
         }
         
@@ -129,14 +129,51 @@ public class SAFDownloadManager {
     }
     
     /**
-     * Obtém OutputStream para escrita no arquivo
+     * Encontra um arquivo de download para um jogo
+     */
+    public DocumentFile findDownloadFile(Game game, DownloadLink downloadLink) {
+        DocumentFile gameDir = createGameDirectory(game);
+        if (gameDir == null) {
+            return null;
+        }
+
+        String fileName = sanitizeFileName(downloadLink.getFileName());
+        if (fileName == null || fileName.isEmpty()) {
+            fileName = "installer.exe"; // Fallback
+        }
+
+        DocumentFile file = gameDir.findFile(fileName);
+        if (file != null && file.isFile()) {
+            return file;
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtém OutputStream para escrita no arquivo (por padrão, sobrescreve)
      */
     public OutputStream getOutputStream(DocumentFile file) throws IOException {
+        return getOutputStream(file, false);
+    }
+
+    /**
+     * Obtém OutputStream para escrita no arquivo
+     * @param file O arquivo a ser escrito
+     * @param append Se true, abre o arquivo em modo de append. Se false, sobrescreve.
+     */
+    public OutputStream getOutputStream(DocumentFile file, boolean append) throws IOException {
         if (file == null || !file.canWrite()) {
             throw new IOException("Cannot write to file");
         }
         
-        return context.getContentResolver().openOutputStream(file.getUri());
+        String mode = append ? "wa" : "w";
+        try {
+            return context.getContentResolver().openOutputStream(file.getUri(), mode);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to open output stream for " + file.getUri() + " with mode " + mode, e);
+            throw e;
+        }
     }
     
     /**
@@ -270,5 +307,82 @@ public class SAFDownloadManager {
         }
         
         return "Nenhuma pasta selecionada";
+    }
+
+    /**
+     * Cria ou encontra um arquivo de parte para um download em pedaços.
+     */
+    public DocumentFile createOrFindDownloadPartFile(Game game, DownloadLink downloadLink, int partIndex) {
+        DocumentFile gameDir = createGameDirectory(game);
+        if (gameDir == null) {
+            return null;
+        }
+
+        String baseFileName = sanitizeFileName(downloadLink.getFileName());
+        String partFileName = baseFileName + ".part" + partIndex;
+
+        DocumentFile partFile = gameDir.findFile(partFileName);
+        if (partFile != null && partFile.isFile()) {
+            return partFile;
+        }
+
+        return gameDir.createFile("application/octet-stream", partFileName);
+    }
+
+    /**
+     * Concatena uma lista de arquivos de parte em um único arquivo final.
+     * DELETA os arquivos de parte após a concatenação bem-sucedida.
+     */
+    public void concatenateFiles(List<DocumentFile> partFiles, DocumentFile finalFile) throws IOException {
+        Log.d(TAG, "Concatenating " + partFiles.size() + " parts into " + finalFile.getName());
+
+        try (OutputStream finalOut = getOutputStream(finalFile, false)) { // Always overwrite final file
+            byte[] buffer = new byte[65536];
+            for (DocumentFile partFile : partFiles) {
+                if (partFile == null || !partFile.exists()) {
+                    throw new IOException("Part file is missing: " + (partFile != null ? partFile.getName() : "null"));
+                }
+                try (InputStream partIn = getInputStream(partFile)) {
+                    int bytesRead;
+                    while ((bytesRead = partIn.read(buffer)) != -1) {
+                        finalOut.write(buffer, 0, bytesRead);
+                    }
+                }
+            }
+            finalOut.flush();
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to concatenate files.", e);
+            throw e;
+        }
+
+        Log.d(TAG, "Concatenation successful. Deleting part files.");
+        for (DocumentFile partFile : partFiles) {
+            if (partFile != null && partFile.exists()) {
+                if (!partFile.delete()) {
+                    Log.w(TAG, "Failed to delete part file: " + partFile.getName());
+                }
+            }
+        }
+    }
+
+    /**
+     * Deleta todos os arquivos de parte para um download.
+     */
+    public void deleteDownloadPartFiles(Game game, DownloadLink downloadLink, int numParts) {
+        DocumentFile gameDir = createGameDirectory(game);
+        if (gameDir == null) {
+            return;
+        }
+
+        String baseFileName = sanitizeFileName(downloadLink.getFileName());
+        for (int i = 0; i < numParts; i++) {
+            String partFileName = baseFileName + ".part" + i;
+            DocumentFile partFile = gameDir.findFile(partFileName);
+            if (partFile != null && partFile.exists()) {
+                if (!partFile.delete()) {
+                    Log.w(TAG, "Failed to delete part file: " + partFile.getName());
+                }
+            }
+        }
     }
 }
