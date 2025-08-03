@@ -450,7 +450,18 @@ public class GOGAuthManager {
         String avatarUrl = "";
         if (accountData.has("avatars")) {
             JSONObject avatars = accountData.getJSONObject("avatars");
-            avatarUrl = avatars.optString("menu_user_av_small", "");
+            // Prioritize the high-resolution image
+            avatarUrl = avatars.optString("menu_user_av_big2", "");
+            // Fallback to other sizes if the preferred one isn't available
+            if (avatarUrl.isEmpty()) {
+                avatarUrl = avatars.optString("menu_user_av_big", "");
+            }
+            if (avatarUrl.isEmpty()) {
+                avatarUrl = avatars.optString("menu_user_av_small2", "");
+            }
+            if (avatarUrl.isEmpty()) {
+                avatarUrl = avatars.optString("menu_user_av_small", "");
+            }
         }
 
         if (avatarUrl.isEmpty()) {
