@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHolder> {
+
+    private static final String PAYLOAD_PROGRESS_UPDATE = "PAYLOAD_PROGRESS_UPDATE";
     
     private Context context;
     private List<Game> games;
@@ -85,7 +87,7 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
                 game.setCurrentFileIndex(currentFileIndex);
                 game.setTotalFiles(totalFiles);
                 
-                notifyItemChanged(i);
+                notifyItemChanged(i, PAYLOAD_PROGRESS_UPDATE);
                 break;
             }
         }
@@ -121,6 +123,20 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
     public void onBindViewHolder(@NonNull GameViewHolder holder, int position) {
         Game game = filteredGames.get(position);
         holder.bind(game);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull GameViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads);
+        } else {
+            for (Object payload : payloads) {
+                if (payload.equals(PAYLOAD_PROGRESS_UPDATE)) {
+                    Game game = filteredGames.get(position);
+                    holder.updateProgressViews(game);
+                }
+            }
+        }
     }
     
     @Override
@@ -302,6 +318,12 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
                 case DOWNLOADED:
                     listener.onOpenGame(game);
                     break;
+            }
+        }
+
+        public void updateProgressViews(Game game) {
+            if (game.getStatus() == Game.DownloadStatus.DOWNLOADING) {
+                showDownloadingState(game);
             }
         }
     }
