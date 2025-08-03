@@ -27,10 +27,10 @@ import java.io.File;
 
 public class SettingsActivity extends AppCompatActivity {
     
-    private TextView currentPathText;
     private TextView userEmailText;
     private TextView appVersionText;
-    private Button chooseFolderButton;
+    private TextView safPathText;
+    private Button changeSafFolderButton;
     private Button logoutButton;
     private Button clearCacheButton;
     private Button saveButton;
@@ -65,10 +65,10 @@ public class SettingsActivity extends AppCompatActivity {
     }
     
     private void initializeViews() {
-        currentPathText = findViewById(R.id.currentPathText);
         userEmailText = findViewById(R.id.userEmailText);
         appVersionText = findViewById(R.id.appVersionText);
-        chooseFolderButton = findViewById(R.id.chooseFolderButton);
+        safPathText = findViewById(R.id.safPathText);
+        changeSafFolderButton = findViewById(R.id.changeSafFolderButton);
         logoutButton = findViewById(R.id.logoutButton);
         clearCacheButton = findViewById(R.id.clearCacheButton);
         saveButton = findViewById(R.id.saveButton);
@@ -106,7 +106,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
     
     private void setupClickListeners() {
-        chooseFolderButton.setOnClickListener(v -> openFolderPicker());
+        changeSafFolderButton.setOnClickListener(v -> openFolderPicker());
         logoutButton.setOnClickListener(v -> showLogoutConfirmation());
         clearCacheButton.setOnClickListener(v -> showClearCacheConfirmation());
         saveButton.setOnClickListener(v -> saveSettings());
@@ -120,12 +120,11 @@ public class SettingsActivity extends AppCompatActivity {
         String displayPath = safManager.getDisplayPath();
         
         android.util.Log.d("SettingsActivity", "Download path: '" + displayPath + "'");
-        currentPathText.setText(getString(R.string.folder_selected) + " " + displayPath);
+        safPathText.setText(displayPath);
         
         // Para o seletor de pasta, manter referência para qualquer path configurado
-        String legacyPath = preferencesManager.getDownloadPathLegacy();
         String uriPath = preferencesManager.getDownloadUri();
-        selectedPath = (uriPath != null && !uriPath.isEmpty()) ? uriPath : legacyPath;
+        selectedPath = uriPath;
         
         // Carregar email do usuário com debug
         String userEmail = preferencesManager.getUserEmail();
@@ -159,137 +158,41 @@ public class SettingsActivity extends AppCompatActivity {
     }
     
     private void openFolderPicker() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ - usar Storage Access Framework
-            openStorageAccessFramework();
-        } else {
-            // Android 10 e anteriores - usar seletor de diretório simples
-            openLegacyFolderPicker();
-        }
-    }
-    
-    private void openStorageAccessFramework() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | 
-                       Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
-                       Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        
-        // Definir diretório inicial se possível
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             Uri initialUri = Uri.fromFile(downloadsDir);
             intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialUri);
         }
-        
+
         try {
             folderPickerLauncher.launch(intent);
         } catch (Exception e) {
-            Toast.makeText(this, "Erro ao abrir seletor de pasta", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Error opening folder picker", Toast.LENGTH_LONG).show();
         }
     }
-    
-    private void openLegacyFolderPicker() {
-        // Para Android mais antigo, mostrar dialog com opções pré-definidas
-        String[] options = {
-            "Downloads/GOG (Padrão)",
-            "Armazenamento interno/GOG",
-            "Cartão SD/GOG (se disponível)",
-            "Escolher manualmente"
-        };
-        
-        new AlertDialog.Builder(this)
-                .setTitle("Escolher pasta de download")
-                .setItems(options, (dialog, which) -> {
-                    switch (which) {
-                        case 0: // Downloads/GOG
-                            selectedPath = preferencesManager.getDefaultDownloadPath();
-                            updatePathDisplay();
-                            break;
-                        case 1: // Armazenamento interno
-                            File internalDir = new File(getExternalFilesDir(null), "GOG");
-                            selectedPath = internalDir.getAbsolutePath();
-                            updatePathDisplay();
-                            break;
-                        case 2: // Cartão SD
-                            checkExternalStorage();
-                            break;
-                        case 3: // Manual
-                            showManualPathInput();
-                            break;
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-    
+
     private void handleSelectedFolder(Uri uri) {
         try {
-            // Obter permissão persistente
             getContentResolver().takePersistableUriPermission(uri,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            
-            // Converter URI para caminho se possível
-            String path = getPathFromUri(uri);
-            if (path != null) {
-                selectedPath = path;
-                updatePathDisplay();
-            } else {
-                Toast.makeText(this, "Não foi possível acessar a pasta selecionada", Toast.LENGTH_LONG).show();
-            }
-            
-        } catch (Exception e) {
-            Toast.makeText(this, "Erro ao configurar pasta: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-    
-    private String getPathFromUri(Uri uri) {
-        // Tentativa simples de converter URI em caminho
-        // Para implementação completa, seria necessário usar DocumentFile
-        String uriString = uri.toString();
-        
-        if (uriString.contains("primary")) {
-            String relativePath = uriString.substring(uriString.lastIndexOf("primary:") + 8);
-            return Environment.getExternalStorageDirectory() + "/" + relativePath;
-        }
-        
-        // Fallback: usar URI como está e criar diretório GOG dentro
-        return Environment.getExternalStorageDirectory() + "/GOG";
-    }
-    
-    private void checkExternalStorage() {
-        // Verificar se há cartão SD disponível
-        File[] externalDirs = getExternalFilesDirs(null);
-        if (externalDirs.length > 1 && externalDirs[1] != null) {
-            File sdDir = new File(externalDirs[1], "GOG");
-            selectedPath = sdDir.getAbsolutePath();
+
+            selectedPath = uri.toString();
+            preferencesManager.setDownloadUri(selectedPath);
             updatePathDisplay();
-        } else {
-            Toast.makeText(this, "Cartão SD não encontrado", Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Error setting folder: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
-    
-    private void showManualPathInput() {
-        // Dialog para inserir caminho manualmente
-        android.widget.EditText editText = new android.widget.EditText(this);
-        editText.setText(selectedPath);
-        editText.setHint("Ex: /storage/emulated/0/Download/GOG");
-        
-        new AlertDialog.Builder(this)
-                .setTitle("Inserir caminho da pasta")
-                .setView(editText)
-                .setPositiveButton("OK", (dialog, which) -> {
-                    String path = editText.getText().toString().trim();
-                    if (!path.isEmpty()) {
-                        selectedPath = path;
-                        updatePathDisplay();
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-    
+
     private void updatePathDisplay() {
-        currentPathText.setText(getString(R.string.folder_selected) + " " + selectedPath);
+        SAFDownloadManager safManager = new SAFDownloadManager(this);
+        safPathText.setText(safManager.getDisplayPath());
     }
     
     private void showLogoutConfirmation() {

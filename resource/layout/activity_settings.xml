@@ -71,6 +71,53 @@
                         android:layout_height="wrap_content"
                         android:text="@string/choose_folder"
                         style="@style/Widget.Material3.Button.TonalButton" />
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Storage Access Framework (SAF) Settings -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Storage"
+                        android:textAppearance="?attr/textAppearanceTitleLarge"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Current Download Folder"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/safPathText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Not selected"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:background="?attr/colorSurfaceContainerLowest"
+                        android:padding="12dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/changeSafFolderButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Change Folder"
+                        style="@style/Widget.Material3.Button.TonalButton" />
 
                 </LinearLayout>
 

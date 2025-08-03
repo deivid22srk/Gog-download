@@ -600,14 +600,27 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select a file to download");
 
+        // Filter for Windows installers
+        List<DownloadLink> windowsInstallers = new ArrayList<>();
+        for (DownloadLink link : downloadLinks) {
+            if (link.getPlatform() == DownloadLink.Platform.WINDOWS && link.getType() == DownloadLink.FileType.INSTALLER) {
+                windowsInstallers.add(link);
+            }
+        }
+
+        if (windowsInstallers.isEmpty()) {
+            showError("No Windows installers found for this game.");
+            return;
+        }
+
         // Create a list of file names to display in the dialog
-        String[] fileNames = new String[downloadLinks.size()];
-        for (int i = 0; i < downloadLinks.size(); i++) {
-            fileNames[i] = downloadLinks.get(i).getName() + " (" + downloadLinks.get(i).getFormattedSize() + ")";
+        String[] fileNames = new String[windowsInstallers.size()];
+        for (int i = 0; i < windowsInstallers.size(); i++) {
+            fileNames[i] = windowsInstallers.get(i).getName() + " (" + windowsInstallers.get(i).getFormattedSize() + ")";
         }
 
         builder.setItems(fileNames, (dialog, which) -> {
-            DownloadLink selectedLink = downloadLinks.get(which);
+            DownloadLink selectedLink = windowsInstallers.get(which);
             // Check for download location before starting the download
             if (!safDownloadManager.hasDownloadLocationConfigured()) {
                 Log.d("LibraryActivity", "No download folder configured, requesting selection");
