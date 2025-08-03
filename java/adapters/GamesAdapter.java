@@ -66,6 +66,18 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             }
         }
     }
+
+    public void updateGameProgress(long gameId, long bytesDownloaded, long totalBytes) {
+        for (int i = 0; i < filteredGames.size(); i++) {
+            Game game = filteredGames.get(i);
+            if (game.getId() == gameId) {
+                game.setDownloadProgress(bytesDownloaded);
+                game.setTotalSize(totalBytes);
+                notifyItemChanged(i);
+                break;
+            }
+        }
+    }
     
     public void filter(String query) {
         filteredGames.clear();

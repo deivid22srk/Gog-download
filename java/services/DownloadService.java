@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.gogdownloader.R;
 import com.example.gogdownloader.activities.LibraryActivity;
@@ -47,14 +48,17 @@ public class DownloadService extends Service {
     private static final String TAG = "DownloadService";
     
     // Actions
+    public static final String ACTION_DOWNLOAD_PROGRESS = "com.example.gogdownloader.DOWNLOAD_PROGRESS";
     private static final String ACTION_DOWNLOAD = "com.example.gogdownloader.DOWNLOAD";
     private static final String ACTION_CANCEL = "com.example.gogdownloader.CANCEL";
     private static final String ACTION_STOP_SERVICE = "com.example.gogdownloader.STOP_SERVICE";
     
     // Extras
+    public static final String EXTRA_GAME_ID = "extra_game_id";
+    public static final String EXTRA_BYTES_DOWNLOADED = "extra_bytes_downloaded";
+    public static final String EXTRA_TOTAL_BYTES = "extra_total_bytes";
     private static final String EXTRA_GAME = "extra_game";
     private static final String EXTRA_DOWNLOAD_LINK = "extra_download_link";
-    private static final String EXTRA_GAME_ID = "extra_game_id";
     
     // Notification
     private static final String CHANNEL_ID = "download_channel";
@@ -279,6 +283,12 @@ public class DownloadService extends Service {
                 Game.formatFileSize(totalBytes));
         
         showDownloadNotification(game, progress, progressText);
+
+        Intent intent = new Intent(ACTION_DOWNLOAD_PROGRESS);
+        intent.putExtra(EXTRA_GAME_ID, game.getId());
+        intent.putExtra(EXTRA_BYTES_DOWNLOADED, bytesDownloaded);
+        intent.putExtra(EXTRA_TOTAL_BYTES, totalBytes);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
     
     private void onDownloadComplete(Game game, String filePath) {

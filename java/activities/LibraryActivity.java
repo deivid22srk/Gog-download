@@ -3,6 +3,7 @@ package com.example.gogdownloader.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,6 +39,10 @@ import android.text.TextWatcher;
 import android.text.Editable;
 import com.example.gogdownloader.models.DownloadLink;
 import java.util.ArrayList;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 
 import org.json.JSONObject;
@@ -69,6 +74,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     private ActivityResultLauncher<Intent> folderPickerLauncher;
     private Game pendingDownloadGame; // Jogo aguardando seleção de pasta
     private DownloadLink pendingDownloadLink;
+    private BroadcastReceiver downloadProgressReceiver;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +89,32 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         setupClickListeners();
         checkPermissions();
         loadLibrary();
+
+        downloadProgressReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                long gameId = intent.getLongExtra(DownloadService.EXTRA_GAME_ID, -1);
+                if (gameId != -1) {
+                    gamesAdapter.updateGameProgress(
+                        gameId,
+                        intent.getLongExtra(DownloadService.EXTRA_BYTES_DOWNLOADED, 0),
+                        intent.getLongExtra(DownloadService.EXTRA_TOTAL_BYTES, 0)
+                    );
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(downloadProgressReceiver, new IntentFilter(DownloadService.ACTION_DOWNLOAD_PROGRESS));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(downloadProgressReceiver);
     }
     
     private void setupFolderPickerLauncher() {
@@ -607,41 +639,24 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
 
     private void showDownloadSelectionDialog(Game game, List<DownloadLink> downloadLinks) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Select a file to download");
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_download_selection, null);
+        builder.setView(dialogView);
 
-        // Filter for Windows installers
-        List<DownloadLink> windowsInstallers = new ArrayList<>();
-        for (DownloadLink link : downloadLinks) {
-            if (link.getPlatform() == DownloadLink.Platform.WINDOWS && link.getType() == DownloadLink.FileType.INSTALLER) {
-                windowsInstallers.add(link);
-            }
-        }
+        RecyclerView recyclerView = dialogView.findViewById(R.id.downloadLinksRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        if (windowsInstallers.isEmpty()) {
-            showError("No Windows installers found for this game.");
-            return;
-        }
-
-        // Create a list of file names to display in the dialog
-        String[] fileNames = new String[windowsInstallers.size()];
-        for (int i = 0; i < windowsInstallers.size(); i++) {
-            fileNames[i] = windowsInstallers.get(i).getName() + " (" + windowsInstallers.get(i).getFormattedSize() + ")";
-        }
-
-        builder.setItems(fileNames, (dialog, which) -> {
-            DownloadLink selectedLink = windowsInstallers.get(which);
-            // Check for download location before starting the download
+        DownloadLinkAdapter adapter = new DownloadLinkAdapter(this, downloadLinks, selectedLink -> {
             if (!safDownloadManager.hasDownloadLocationConfigured()) {
                 Log.d("LibraryActivity", "No download folder configured, requesting selection");
-                // Save the pending download and request folder selection
                 pendingDownloadGame = game;
                 pendingDownloadLink = selectedLink;
                 showFolderSelectionDialog();
             } else {
-                // Start the download service with the selected link
                 startGameDownload(game, selectedLink);
             }
         });
+        recyclerView.setAdapter(adapter);
 
         builder.setNegativeButton("Cancel", null);
         builder.show();
