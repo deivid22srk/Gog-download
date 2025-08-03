@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    tools:context=".activities.FolderSelectionActivity">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Configure suas pastas"
+        android:textAppearance="?attr/textAppearanceHeadline5"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Antes de continuar, por favor, selecione as pastas para downloads e instalações."
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:gravity="center"
+        android:layout_marginBottom="32dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/selectDownloadFolderButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Selecionar Pasta de Downloads"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/downloadFolderPath"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nenhuma pasta selecionada"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:layout_marginBottom="24dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/selectInstallFolderButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Selecionar Pasta de Instalação"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/installFolderPath"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nenhuma pasta selecionada"
+        android:textAppearance="?attr/textAppearanceCaption"
+        android:layout_marginBottom="32dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/continueButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Continuar"
+        android:enabled="false" />
+
+</LinearLayout>

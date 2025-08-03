@@ -141,6 +141,15 @@ public class PreferencesManager {
         return preferences.getString(KEY_DOWNLOAD_URI, null);
     }
 
+    public void setInstallUri(String uriString) {
+        editor.putString("install_uri", uriString);
+        editor.apply();
+    }
+
+    public String getInstallUri() {
+        return preferences.getString("install_uri", null);
+    }
+
     public void clearDownloadUri() {
         editor.remove(KEY_DOWNLOAD_URI).apply();
     }

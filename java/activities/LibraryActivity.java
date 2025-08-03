@@ -85,9 +85,18 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_library);
         
+        initializeManagers(); // Initialize managers first to access preferences
+
+        // Check if folders are selected
+        if (!preferencesManager.hasDownloadLocationConfigured() || preferencesManager.getInstallUri() == null) {
+            Intent intent = new Intent(this, FolderSelectionActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         setupFolderPickerLauncher();
         initializeViews();
-        initializeManagers();
         setupToolbar();
         setupRecyclerView();
         setupClickListeners();
