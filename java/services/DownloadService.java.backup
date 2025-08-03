@@ -842,18 +842,15 @@ public class DownloadService extends Service {
                     int bytesRead;
                     
                     long lastProgressUpdate = System.currentTimeMillis();
-                    speedMeter.reset(); // Reset do medidor
                     
                     while ((bytesRead = inputStream.read(buffer)) != -1 && !cancelled) {
                         outputStream.write(buffer, 0, bytesRead);
                         bytesDownloaded += bytesRead;
                         
-                        // Atualizar progresso e velocidade
+                        // Atualizar progresso a cada 100ms para não sobrecarregar
                         long currentTime = System.currentTimeMillis();
                         if (currentTime - lastProgressUpdate > 250) {
-                            double speed = speedMeter.updateSpeed(bytesDownloaded);
-                            long eta = speedMeter.calculateETA(bytesDownloaded, totalBytes);
-                            onDownloadProgress(game, bytesDownloaded, totalBytes, 0, 0, speed, eta);
+                            onDownloadProgress(game, bytesDownloaded, totalBytes);
                             lastProgressUpdate = currentTime;
                         }
                         
@@ -896,7 +893,6 @@ public class DownloadService extends Service {
         private List<DownloadLink> downloadLinks;
         private volatile boolean cancelled = false;
         private int currentFileIndex = 0;
-        private SpeedMeter speedMeter = new SpeedMeter();
         
         public BatchDownloadTask(Game game, List<DownloadLink> downloadLinks) {
             this.game = game;
@@ -1061,7 +1057,8 @@ public class DownloadService extends Service {
                     int bytesRead;
                     
                     long lastProgressUpdate = System.currentTimeMillis();
-                    speedMeter.reset(); // Reset do medidor para este arquivo
+                    long lastSpeedUpdate = System.currentTimeMillis();
+                    long lastBytesForSpeed = 0;
                     
                     while ((bytesRead = inputStream.read(buffer)) != -1 && !cancelled) {
                         outputStream.write(buffer, 0, bytesRead);
@@ -1069,10 +1066,24 @@ public class DownloadService extends Service {
                         
                         long currentTime = System.currentTimeMillis();
                         
-                        // Atualizar progresso e velocidade usando SpeedMeter
+                        // Calcular velocidade de download
+                        double speed = 0;
+                        if (currentTime - lastSpeedUpdate >= 1000) { // Atualizar velocidade a cada segundo
+                            long bytesInLastSecond = fileBytesDownloaded - lastBytesForSpeed;
+                            speed = bytesInLastSecond; // bytes per second
+                            lastSpeedUpdate = currentTime;
+                            lastBytesForSpeed = fileBytesDownloaded;
+                        }
+                        
+                        // Calcular ETA
+                        long eta = 0;
+                        if (speed > 0) {
+                            long remainingBytes = fileSize - fileBytesDownloaded;
+                            eta = (long) (remainingBytes / speed);
+                        }
+                        
+                        // Atualizar progresso a cada 100ms
                         if (currentTime - lastProgressUpdate > 250) {
-                            double speed = speedMeter.updateSpeed(fileBytesDownloaded);
-                            long eta = speedMeter.calculateETA(fileBytesDownloaded, fileSize);
                             long totalDownloadedIncludingThis = totalBytesDownloadedSoFar + fileBytesDownloaded;
                             onDownloadProgress(game, totalDownloadedIncludingThis, totalBytesAllFiles, 
                                              currentFileIndex, downloadLinks.size(), speed, eta);

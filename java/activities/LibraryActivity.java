@@ -608,7 +608,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     }
     
     private void showLogoutDialog() {
-        new AlertDialog.Builder(this)
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                 .setTitle("Logout")
                 .setMessage("Tem certeza que deseja sair?")
                 .setPositiveButton("Sim", (dialog, which) -> logout())
@@ -633,7 +633,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         Log.d("LibraryActivity", "Download requested for: " + game.getTitle());
 
         // Show a loading dialog while we fetch the download links
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        com.google.android.material.dialog.MaterialAlertDialogBuilder builder = new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
         builder.setTitle("Fetching Download Links");
         builder.setMessage("Please wait...");
         builder.setCancelable(false);
@@ -664,7 +664,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     }
 
     private void showDownloadSelectionDialog(Game game, List<DownloadLink> downloadLinks) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        com.google.android.material.dialog.MaterialAlertDialogBuilder builder = new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_download_selection, null);
         builder.setView(dialogView);
@@ -726,7 +726,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     }
     
     private void showFolderSelectionDialog() {
-        new AlertDialog.Builder(this)
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                 .setTitle(getString(R.string.download_folder))
                 .setMessage("Você precisa selecionar uma pasta onde os jogos serão salvos. Deseja escolher uma pasta agora?")
                 .setPositiveButton(getString(R.string.choose_folder), (dialog, which) -> {
@@ -833,7 +833,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     
     private void showGameDetails(Game game) {
         // Criar dialog com detalhes do jogo
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        com.google.android.material.dialog.MaterialAlertDialogBuilder builder = new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
         builder.setTitle(game.getTitle());
         
         StringBuilder details = new StringBuilder();

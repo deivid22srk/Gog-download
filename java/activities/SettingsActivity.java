@@ -193,7 +193,7 @@ public class SettingsActivity extends BaseActivity {
     }
     
     private void showLogoutConfirmation() {
-        new AlertDialog.Builder(this)
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                 .setTitle("Logout")
                 .setMessage("Tem certeza que deseja sair? Todos os dados de login serão removidos.")
                 .setPositiveButton("Sim", (dialog, which) -> performLogout())
@@ -213,7 +213,7 @@ public class SettingsActivity extends BaseActivity {
     }
     
     private void showClearCacheConfirmation() {
-        new AlertDialog.Builder(this)
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                 .setTitle("Limpar Cache")
                 .setMessage("Isso irá remover todos os dados salvos de jogos e imagens. Os arquivos baixados não serão afetados.")
                 .setPositiveButton("Limpar", (dialog, which) -> clearCache())
