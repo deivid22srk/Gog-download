@@ -44,6 +44,9 @@ import com.example.gogdownloader.utils.PreferencesManager;
 import com.example.gogdownloader.utils.SAFDownloadManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import android.net.Uri;
+import android.widget.ProgressBar;
 
 import org.json.JSONObject;
 
@@ -210,7 +213,7 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         refreshButton = findViewById(R.id.refreshButton);
         retryButton = findViewById(R.id.retryButton);
         searchEditText = findViewById(R.id.searchEditText);
-        settingsFab = findViewById(R.id.settingsFab);
+        installFab = findViewById(R.id.installFab);
     }
     
     private void initializeManagers() {
@@ -923,7 +926,6 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         }).start();
     }
     
-    @Override
     private void setupInstallFolderPickerLauncher() {
         installerFolderPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
