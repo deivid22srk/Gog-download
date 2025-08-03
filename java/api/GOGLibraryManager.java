@@ -625,9 +625,14 @@ public class GOGLibraryManager {
                     Log.d(TAG, "Download link response: " + responseBody);
                     
                     if (response.isSuccessful()) {
+                        Log.d(TAG, "Download link response body: " + responseBody);
                         try {
                             JSONObject jsonResponse = new JSONObject(responseBody);
                             String downloadUrl = jsonResponse.optString("downlink", "");
+
+                            if (downloadUrl.isEmpty()) {
+                                downloadUrl = jsonResponse.optString("url", "");
+                            }
                             
                             if (!downloadUrl.isEmpty()) {
                                 Log.d(TAG, "Download link obtained successfully");
