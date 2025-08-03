@@ -132,15 +132,14 @@
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:minWidth="80dp" />
 
-            <!-- Status Icon -->
-            <ImageView
-                android:id="@+id/statusIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="4dp"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cancel"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:visibility="gone"
-                android:contentDescription="Download Status" />
+                android:minWidth="80dp" />
 
         </LinearLayout>
 

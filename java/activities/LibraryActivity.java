@@ -804,6 +804,18 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
     }
     
     @Override
+    public void onPauseDownload(Game game) {
+        Intent pauseIntent = DownloadService.createPauseIntent(this, game.getId());
+        startService(pauseIntent);
+    }
+
+    @Override
+    public void onResumeDownload(Game game) {
+        Intent resumeIntent = DownloadService.createResumeIntent(this, game.getId());
+        startService(resumeIntent);
+    }
+
+    @Override
     public void onCancelDownload(Game game) {
         // Cancelar download
         Intent cancelIntent = DownloadService.createCancelIntent(this, game.getId());

@@ -17,6 +17,7 @@ public class Game implements Serializable {
     public enum DownloadStatus {
         NOT_DOWNLOADED,
         DOWNLOADING,
+        PAUSED,
         DOWNLOADED,
         FAILED
     }
