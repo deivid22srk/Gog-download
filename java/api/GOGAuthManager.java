@@ -446,7 +446,13 @@ public class GOGAuthManager {
         userData.put("userId", accountData.optString("userId", ""));
         userData.put("first_name", accountData.optString("firstName", ""));
         userData.put("last_name", accountData.optString("lastName", ""));
-        userData.put("avatar", accountData.optString("avatar", ""));
+
+        String avatarUrl = accountData.optString("avatar", "");
+        if (avatarUrl.startsWith("//")) {
+            avatarUrl = "https:" + avatarUrl;
+            Log.d(TAG, "Corrected protocol-relative avatar URL to: " + avatarUrl);
+        }
+        userData.put("avatar", avatarUrl);
         
         Log.d(TAG, "Processed account basic data: " + userData.toString());
         return userData;
