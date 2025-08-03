@@ -496,9 +496,9 @@ public class DownloadService extends Service {
                         outputStream.write(buffer, 0, bytesRead);
                         bytesDownloaded += bytesRead;
                         
-                        // Atualizar progresso a cada 500ms para não sobrecarregar
+                        // Atualizar progresso a cada 100ms para não sobrecarregar
                         long currentTime = System.currentTimeMillis();
-                        if (currentTime - lastProgressUpdate > 500) {
+                        if (currentTime - lastProgressUpdate > 100) {
                             onDownloadProgress(game, bytesDownloaded, totalBytes);
                             lastProgressUpdate = currentTime;
                         }
@@ -577,9 +577,9 @@ public class DownloadService extends Service {
                         outputStream.write(buffer, 0, bytesRead);
                         bytesDownloaded += bytesRead;
                         
-                        // Atualizar progresso a cada 500ms para não sobrecarregar
+                        // Atualizar progresso a cada 100ms para não sobrecarregar
                         long currentTime = System.currentTimeMillis();
-                        if (currentTime - lastProgressUpdate > 500) {
+                        if (currentTime - lastProgressUpdate > 100) {
                             onDownloadProgress(game, bytesDownloaded, totalBytes);
                             lastProgressUpdate = currentTime;
                         }

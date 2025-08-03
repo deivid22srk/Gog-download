@@ -3,7 +3,9 @@ package com.example.gogdownloader.models;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.Serializable;
+import java.net.URL;
 
 public class DownloadLink implements Serializable {
     
@@ -184,6 +186,14 @@ public class DownloadLink implements Serializable {
     }
     
     public String getFileName() {
+        if (downloadUrl != null && !downloadUrl.isEmpty()) {
+            try {
+                return new File(new URL(downloadUrl).getPath()).getName();
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+
         if (name != null && !name.isEmpty()) {
             return name;
         }
