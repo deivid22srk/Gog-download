@@ -48,17 +48,26 @@ public class ImageLoader {
         return instance;
     }
     
+    public static void loadImage(Context context, String coverImageUrl, String backgroundImageUrl, ImageView imageView) {
+        getInstance().load(context, coverImageUrl, backgroundImageUrl, imageView);
+    }
+
     public static void loadImage(Context context, String imageUrl, ImageView imageView) {
-        getInstance().load(context, imageUrl, imageView);
+        getInstance().load(context, imageUrl, null, imageView);
     }
     
-    public void load(Context context, String imageUrl, ImageView imageView) {
+    public void load(Context context, String coverImageUrl, String backgroundImageUrl, ImageView imageView) {
         Log.d(TAG, "=== LOADING IMAGE ===");
-        Log.d(TAG, "Original URL: '" + imageUrl + "'");
-        
-        if (imageUrl == null || imageUrl.isEmpty()) {
-            Log.w(TAG, "Image URL is empty, using placeholder");
-            imageView.setImageResource(R.drawable.ic_image);
+        Log.d(TAG, "Cover URL: '" + coverImageUrl + "'");
+        Log.d(TAG, "Background URL: '" + backgroundImageUrl + "'");
+
+        if (coverImageUrl == null || coverImageUrl.isEmpty()) {
+            if (backgroundImageUrl != null && !backgroundImageUrl.isEmpty()) {
+                load(context, backgroundImageUrl, null, imageView);
+            } else {
+                Log.w(TAG, "Image URLs are empty, using placeholder");
+                imageView.setImageResource(R.drawable.ic_image);
+            }
             return;
         }
         
@@ -75,27 +84,32 @@ public class ImageLoader {
         imageView.setImageResource(android.R.drawable.ic_menu_gallery);
         
         // Carregar imagem em background
-        Log.d(TAG, "Starting background download for: " + imageUrl);
+        Log.d(TAG, "Starting background download for: " + coverImageUrl);
         executorService.execute(() -> {
             try {
-                Log.d(TAG, "Downloading bitmap: " + imageUrl);
-                Bitmap bitmap = downloadBitmap(imageUrl);
+                Log.d(TAG, "Downloading bitmap: " + coverImageUrl);
+                Bitmap bitmap = downloadBitmap(coverImageUrl);
                 if (bitmap != null) {
-                    Log.d(TAG, "Bitmap downloaded successfully: " + imageUrl);
+                    Log.d(TAG, "Bitmap downloaded successfully: " + coverImageUrl);
                     // Adicionar ao cache
-                    memoryCache.put(imageUrl, bitmap);
+                    memoryCache.put(coverImageUrl, bitmap);
                     
                     // Atualizar UI na thread principal
                     mainHandler.post(() -> {
-                        Log.d(TAG, "Setting bitmap to ImageView: " + imageUrl);
+                        Log.d(TAG, "Setting bitmap to ImageView: " + coverImageUrl);
                         imageView.setImageBitmap(bitmap);
                     });
                 } else {
-                    Log.e(TAG, "Failed to download bitmap: " + imageUrl);
+                    Log.e(TAG, "Failed to download bitmap: " + coverImageUrl);
+                    if (backgroundImageUrl != null && !backgroundImageUrl.isEmpty()) {
+                        load(context, backgroundImageUrl, null, imageView);
+                    }
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Error loading image: " + imageUrl, e);
-                // Manter placeholder em caso de erro
+                Log.e(TAG, "Error loading image: " + coverImageUrl, e);
+                if (backgroundImageUrl != null && !backgroundImageUrl.isEmpty()) {
+                    load(context, backgroundImageUrl, null, imageView);
+                }
             }
         });
     }

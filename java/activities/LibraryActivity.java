@@ -68,6 +68,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     // Launcher para seleção de pasta de download
     private ActivityResultLauncher<Intent> folderPickerLauncher;
     private Game pendingDownloadGame; // Jogo aguardando seleção de pasta
+    private DownloadLink pendingDownloadLink;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,13 +115,12 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
             Toast.makeText(this, "Pasta de download configurada!", Toast.LENGTH_SHORT).show();
             
             // Se havia um download pendente, iniciar agora
-            if (pendingDownloadGame != null) {
+            if (pendingDownloadGame != null && pendingDownloadLink != null) {
                 Game gameToDownload = pendingDownloadGame;
+                DownloadLink linkToDownload = pendingDownloadLink;
                 pendingDownloadGame = null;
-                // We need a DownloadLink here, but we don't have one.
-                // This is a logic error that needs to be fixed.
-                // For now, I'll just comment out the line that causes the error.
-                // startGameDownload(gameToDownload);
+                pendingDownloadLink = null;
+                startGameDownload(gameToDownload, linkToDownload);
             }
             
         } catch (Exception e) {
@@ -635,7 +635,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
                 Log.d("LibraryActivity", "No download folder configured, requesting selection");
                 // Save the pending download and request folder selection
                 pendingDownloadGame = game;
-                // You might need to pass the selectedLink to the folder selection logic
+                pendingDownloadLink = selectedLink;
                 showFolderSelectionDialog();
             } else {
                 // Start the download service with the selected link

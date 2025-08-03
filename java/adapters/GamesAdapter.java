@@ -170,7 +170,7 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             
             // Imagem de capa
             if (game.getCoverImage() != null && !game.getCoverImage().isEmpty()) {
-                ImageLoader.loadImage(context, game.getCoverImage(), gameCoverImage);
+                ImageLoader.loadImage(context, game.getCoverImage(), game.getBackgroundImage(), gameCoverImage);
             } else {
                 gameCoverImage.setImageResource(R.drawable.ic_image);
             }
