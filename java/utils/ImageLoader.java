@@ -58,7 +58,7 @@ public class ImageLoader {
         
         if (imageUrl == null || imageUrl.isEmpty()) {
             Log.w(TAG, "Image URL is empty, using placeholder");
-            imageView.setImageResource(android.R.drawable.ic_menu_gallery);
+            imageView.setImageResource(R.drawable.ic_image);
             return;
         }
         

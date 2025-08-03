@@ -172,7 +172,7 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             if (game.getCoverImage() != null && !game.getCoverImage().isEmpty()) {
                 ImageLoader.loadImage(context, game.getCoverImage(), gameCoverImage);
             } else {
-                gameCoverImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                gameCoverImage.setImageResource(R.drawable.ic_image);
             }
             
             // Status e ações baseados no estado do download

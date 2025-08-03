@@ -567,23 +567,62 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     // Implementações dos callbacks do adapter
     @Override
     public void onDownloadGame(Game game) {
-        Log.d("LibraryActivity", "Download solicitado para: " + game.getTitle());
-        
-        // Com SAF não precisamos de permissões de armazenamento tradicionais
-        // O sistema fornece acesso através de URIs selecionadas pelo usuário
-        
-        // Verificar se há pasta de download configurada
-        if (!safDownloadManager.hasDownloadLocationConfigured()) {
-            Log.d("LibraryActivity", "Nenhuma pasta configurada, solicitando seleção");
-            
-            // Salvar jogo pendente e solicitar seleção de pasta
-            pendingDownloadGame = game;
-            showFolderSelectionDialog();
-            return;
+        Log.d("LibraryActivity", "Download requested for: " + game.getTitle());
+
+        // Show a loading dialog while we fetch the download links
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Fetching Download Links");
+        builder.setMessage("Please wait...");
+        builder.setCancelable(false);
+        AlertDialog loadingDialog = builder.create();
+        loadingDialog.show();
+
+        libraryManager.loadGameDetails(game.getId(), new GOGLibraryManager.GameDetailsCallback() {
+            @Override
+            public void onSuccess(Game detailedGame, List<DownloadLink> downloadLinks) {
+                loadingDialog.dismiss();
+                if (downloadLinks.isEmpty()) {
+                    showError("No download links found for this game.");
+                    return;
+                }
+                showDownloadSelectionDialog(detailedGame, downloadLinks);
+            }
+
+            @Override
+            public void onError(String error) {
+                loadingDialog.dismiss();
+                showError("Error fetching download links: " + error);
+            }
+        });
+    }
+
+    private void showDownloadSelectionDialog(Game game, List<DownloadLink> downloadLinks) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select a file to download");
+
+        // Create a list of file names to display in the dialog
+        String[] fileNames = new String[downloadLinks.size()];
+        for (int i = 0; i < downloadLinks.size(); i++) {
+            fileNames[i] = downloadLinks.get(i).getName() + " (" + downloadLinks.get(i).getFormattedSize() + ")";
         }
-        
-        // Pasta já configurada, iniciar download
-        startGameDownload(game);
+
+        builder.setItems(fileNames, (dialog, which) -> {
+            DownloadLink selectedLink = downloadLinks.get(which);
+            // Check for download location before starting the download
+            if (!safDownloadManager.hasDownloadLocationConfigured()) {
+                Log.d("LibraryActivity", "No download folder configured, requesting selection");
+                // Save the pending download and request folder selection
+                pendingDownloadGame = game;
+                // You might need to pass the selectedLink to the folder selection logic
+                showFolderSelectionDialog();
+            } else {
+                // Start the download service with the selected link
+                startGameDownload(game, selectedLink);
+            }
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
     
     private void showFolderSelectionDialog() {
@@ -622,19 +661,19 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         }
     }
     
-    private void startGameDownload(Game game) {
-        Log.d("LibraryActivity", "Iniciando download para: " + game.getTitle());
+    private void startGameDownload(Game game, DownloadLink downloadLink) {
+        Log.d("LibraryActivity", "Starting download for: " + game.getTitle() + " - " + downloadLink.getName());
         
-        // Iniciar serviço de download
-        Intent downloadIntent = DownloadService.createDownloadIntent(this, game);
+        // Start the download service
+        Intent downloadIntent = DownloadService.createDownloadIntent(this, game, downloadLink);
         startForegroundService(downloadIntent);
         
-        // Atualizar status do jogo
+        // Update game status
         game.setStatus(Game.DownloadStatus.DOWNLOADING);
         databaseHelper.updateGame(game);
         gamesAdapter.updateGame(game);
         
-        Toast.makeText(this, "Download iniciado: " + game.getTitle(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Download started: " + game.getTitle(), Toast.LENGTH_SHORT).show();
     }
     
     @Override

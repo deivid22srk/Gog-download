@@ -53,6 +53,7 @@ public class DownloadService extends Service {
     
     // Extras
     private static final String EXTRA_GAME = "extra_game";
+    private static final String EXTRA_DOWNLOAD_LINK = "extra_download_link";
     private static final String EXTRA_GAME_ID = "extra_game_id";
     
     // Notification
@@ -69,10 +70,11 @@ public class DownloadService extends Service {
     private SAFDownloadManager safDownloadManager;
     private OkHttpClient httpClient;
     
-    public static Intent createDownloadIntent(Context context, Game game) {
+    public static Intent createDownloadIntent(Context context, Game game, DownloadLink downloadLink) {
         Intent intent = new Intent(context, DownloadService.class);
         intent.setAction(ACTION_DOWNLOAD);
         intent.putExtra(EXTRA_GAME, game);
+        intent.putExtra(EXTRA_DOWNLOAD_LINK, downloadLink);
         return intent;
     }
     
@@ -118,8 +120,9 @@ public class DownloadService extends Service {
         
         if (ACTION_DOWNLOAD.equals(action)) {
             Game game = (Game) intent.getSerializableExtra(EXTRA_GAME);
-            if (game != null) {
-                startDownload(game);
+            DownloadLink downloadLink = (DownloadLink) intent.getSerializableExtra(EXTRA_DOWNLOAD_LINK);
+            if (game != null && downloadLink != null) {
+                startDownload(game, downloadLink);
             }
         } else if (ACTION_CANCEL.equals(action)) {
             long gameId = intent.getLongExtra(EXTRA_GAME_ID, -1);
@@ -177,61 +180,28 @@ public class DownloadService extends Service {
         }
     }
     
-    private void startDownload(Game game) {
+    private void startDownload(Game game, DownloadLink downloadLink) {
         Log.d(TAG, "Starting download for game: " + game.getTitle());
         
-        // Verificar se já está sendo baixado
+        // Check if already downloading
         if (activeDownloads.containsKey(game.getId())) {
             Log.w(TAG, "Game is already being downloaded: " + game.getTitle());
             return;
         }
         
-        // Atualizar status no banco
+        // Update status in db
         game.setStatus(Game.DownloadStatus.DOWNLOADING);
         databaseHelper.updateGame(game);
         
-        // Criar notificação inicial
-        showDownloadNotification(game, 0, "Iniciando download...");
+        // Create initial notification
+        showDownloadNotification(game, 0, "Starting download...");
         
-        // Iniciar como foreground service
-        startForeground(NOTIFICATION_ID + (int) game.getId(), 
-                createDownloadNotification(game, 0, "Iniciando download..."));
+        // Start as foreground service
+        startForeground(NOTIFICATION_ID + (int) game.getId(),
+                createDownloadNotification(game, 0, "Starting download..."));
         
-        // Carregar detalhes do jogo e links de download
-        libraryManager.loadGameDetails(game.getId(), new GOGLibraryManager.GameDetailsCallback() {
-            @Override
-            public void onSuccess(Game detailedGame, List<DownloadLink> downloadLinks) {
-                if (downloadLinks.isEmpty()) {
-                    onDownloadError(game, "Nenhum link de download encontrado");
-                    return;
-                }
-                
-                // Usar o primeiro link de instalador disponível
-                DownloadLink mainInstaller = null;
-                for (DownloadLink link : downloadLinks) {
-                    if (link.getType() == DownloadLink.FileType.INSTALLER && 
-                        link.getPlatform() == DownloadLink.Platform.WINDOWS) {
-                        mainInstaller = link;
-                        break;
-                    }
-                }
-                
-                if (mainInstaller == null && !downloadLinks.isEmpty()) {
-                    mainInstaller = downloadLinks.get(0); // Usar qualquer link se não encontrar instalador Windows
-                }
-                
-                if (mainInstaller != null) {
-                    startFileDownload(detailedGame, mainInstaller);
-                } else {
-                    onDownloadError(game, "Nenhum instalador compatível encontrado");
-                }
-            }
-            
-            @Override
-            public void onError(String error) {
-                onDownloadError(game, error);
-            }
-        });
+        // Start the file download directly
+        startFileDownload(game, downloadLink);
     }
     
     private void startFileDownload(Game game, DownloadLink downloadLink) {
