@@ -646,9 +646,10 @@ public class LibraryActivity extends BaseActivity implements GamesAdapter.OnGame
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_download_selection, null);
-        builder.setView(dialogView);
+        builder.setView(dialogView)
+               .setTitle("Select a file to download");
 
-        RecyclerView recyclerView = dialogView.findViewById(R.id.downloadLinksRecyclerView);
+        RecyclerView recyclerView = (RecyclerView) dialogView;
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         DownloadLinkAdapter adapter = new DownloadLinkAdapter(this, downloadLinks, selectedLink -> {
