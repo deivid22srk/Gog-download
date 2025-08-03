@@ -70,8 +70,11 @@ public class Game implements Serializable {
                 game.coverImage = images.optString("icon", "");
             }
             game.backgroundImage = images.optString("background", "");
+        } else {
+            // Fallback para o campo "image" se o objeto "images" não existir
+            game.coverImage = json.optString("image", "");
         }
-        // REMOVIDO: fallback para campo "image" direto pois URLs antigas retornam 404
+
         // As imagens corretas vêm dos detalhes do jogo via loadGameDetails()
         
         // Garantir que URLs de imagem tenham protocolo

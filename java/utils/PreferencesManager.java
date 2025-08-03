@@ -140,6 +140,10 @@ public class PreferencesManager {
     public String getDownloadUri() {
         return preferences.getString(KEY_DOWNLOAD_URI, null);
     }
+
+    public void clearDownloadUri() {
+        editor.remove(KEY_DOWNLOAD_URI).apply();
+    }
     
     public boolean hasDownloadLocationConfigured() {
         String uri = getDownloadUri();

@@ -97,7 +97,7 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="4dp"
-                    android:progressTint="?attr/colorPrimary"
+                    android:progressTint="?attr/colorSecondary"
                     android:progressBackgroundTint="?attr/colorPrimaryContainer"
                     android:max="100"
                     android:progress="0" />

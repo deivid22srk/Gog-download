@@ -16,6 +16,7 @@
     <string name="loading_library">Carregando biblioteca...</string>
     <string name="no_games">Nenhum jogo encontrado na biblioteca</string>
     <string name="refresh">Atualizar</string>
+    <string name="search_games_hint">Buscar jogos...</string>
     <string name="settings">Configurações</string>
     <string name="logout">Sair</string>
     <string name="download">Download</string>

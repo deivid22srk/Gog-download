@@ -42,23 +42,22 @@
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Download"
+                        android:text="Storage"
                         android:textAppearance="?attr/textAppearanceTitleLarge"
                         android:layout_marginBottom="16dp" />
 
-                    <!-- Download Folder Section -->
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/download_folder"
+                        android:text="Current Download Folder"
                         android:textAppearance="?attr/textAppearanceTitleMedium"
                         android:layout_marginBottom="8dp" />
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/currentPathText"
+                        android:id="@+id/safPathText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/default_folder"
+                        android:text="Not selected"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:background="?attr/colorSurfaceContainerLowest"
@@ -66,10 +65,10 @@
                         android:layout_marginBottom="12dp" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/chooseFolderButton"
+                        android:id="@+id/changeSafFolderButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/choose_folder"
+                        android:text="Change Folder"
                         style="@style/Widget.Material3.Button.TonalButton" />
 
                 </LinearLayout>

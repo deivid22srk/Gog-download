@@ -3,6 +3,7 @@ package com.example.gogdownloader.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,9 +32,19 @@ import com.example.gogdownloader.utils.ImageLoader;
 import com.example.gogdownloader.utils.SAFDownloadManager;
 import com.example.gogdownloader.utils.PreferencesManager;
 import com.example.gogdownloader.utils.PermissionHelper;
-import androidx.appcompat.widget.SearchView;
 import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+import android.text.TextWatcher;
+import android.text.Editable;
+import com.example.gogdownloader.models.DownloadLink;
+import java.util.ArrayList;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import com.example.gogdownloader.adapters.DownloadLinkAdapter;
+
 
 import org.json.JSONObject;
 
@@ -51,7 +62,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     private TextView gameCountText;
     private Button refreshButton;
     private Button retryButton;
-    private SearchView searchView;
+    private TextInputEditText searchEditText;
     private FloatingActionButton settingsFab;
     
     private GOGLibraryManager libraryManager;
@@ -63,6 +74,8 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     // Launcher para seleção de pasta de download
     private ActivityResultLauncher<Intent> folderPickerLauncher;
     private Game pendingDownloadGame; // Jogo aguardando seleção de pasta
+    private DownloadLink pendingDownloadLink;
+    private BroadcastReceiver downloadProgressReceiver;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +90,32 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         setupClickListeners();
         checkPermissions();
         loadLibrary();
+
+        downloadProgressReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                long gameId = intent.getLongExtra(DownloadService.EXTRA_GAME_ID, -1);
+                if (gameId != -1) {
+                    gamesAdapter.updateGameProgress(
+                        gameId,
+                        intent.getLongExtra(DownloadService.EXTRA_BYTES_DOWNLOADED, 0),
+                        intent.getLongExtra(DownloadService.EXTRA_TOTAL_BYTES, 0)
+                    );
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(downloadProgressReceiver, new IntentFilter(DownloadService.ACTION_DOWNLOAD_PROGRESS));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(downloadProgressReceiver);
     }
     
     private void setupFolderPickerLauncher() {
@@ -109,10 +148,12 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
             Toast.makeText(this, "Pasta de download configurada!", Toast.LENGTH_SHORT).show();
             
             // Se havia um download pendente, iniciar agora
-            if (pendingDownloadGame != null) {
+            if (pendingDownloadGame != null && pendingDownloadLink != null) {
                 Game gameToDownload = pendingDownloadGame;
+                DownloadLink linkToDownload = pendingDownloadLink;
                 pendingDownloadGame = null;
-                startGameDownload(gameToDownload);
+                pendingDownloadLink = null;
+                startGameDownload(gameToDownload, linkToDownload);
             }
             
         } catch (Exception e) {
@@ -130,7 +171,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         gameCountText = findViewById(R.id.gameCountText);
         refreshButton = findViewById(R.id.refreshButton);
         retryButton = findViewById(R.id.retryButton);
-        searchView = findViewById(R.id.searchView);
+        searchEditText = findViewById(R.id.searchEditText);
         settingsFab = findViewById(R.id.settingsFab);
     }
     
@@ -160,18 +201,21 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         retryButton.setOnClickListener(v -> loadLibrary());
         settingsFab.setOnClickListener(v -> openSettings());
         
-        // Configurar SearchView
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        // Configurar SearchEditText
+        searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                gamesAdapter.filter(query);
-                return true;
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Não é necessário
             }
-            
+
             @Override
-            public boolean onQueryTextChange(String newText) {
-                gamesAdapter.filter(newText);
-                return true;
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                gamesAdapter.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Não é necessário
             }
         });
     }
@@ -341,7 +385,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         } else {
             Log.d("LibraryActivity", "No avatar to load or userAvatar view not found");
             if (userAvatar != null) {
-                userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
+                userAvatar.setImageResource(R.drawable.ic_account_circle);
             }
         }
     }
@@ -466,7 +510,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         // Definir avatar padrão
         ImageView userAvatar = findViewById(R.id.userAvatar);
         if (userAvatar != null) {
-            userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
+            userAvatar.setImageResource(R.drawable.ic_account_circle);
         }
     }
     
@@ -561,23 +605,62 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     // Implementações dos callbacks do adapter
     @Override
     public void onDownloadGame(Game game) {
-        Log.d("LibraryActivity", "Download solicitado para: " + game.getTitle());
-        
-        // Com SAF não precisamos de permissões de armazenamento tradicionais
-        // O sistema fornece acesso através de URIs selecionadas pelo usuário
-        
-        // Verificar se há pasta de download configurada
-        if (!safDownloadManager.hasDownloadLocationConfigured()) {
-            Log.d("LibraryActivity", "Nenhuma pasta configurada, solicitando seleção");
-            
-            // Salvar jogo pendente e solicitar seleção de pasta
-            pendingDownloadGame = game;
-            showFolderSelectionDialog();
-            return;
-        }
-        
-        // Pasta já configurada, iniciar download
-        startGameDownload(game);
+        Log.d("LibraryActivity", "Download requested for: " + game.getTitle());
+
+        // Show a loading dialog while we fetch the download links
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Fetching Download Links");
+        builder.setMessage("Please wait...");
+        builder.setCancelable(false);
+        AlertDialog loadingDialog = builder.create();
+        loadingDialog.show();
+
+        libraryManager.loadGameDetails(game.getId(), new GOGLibraryManager.GameDetailsCallback() {
+            @Override
+            public void onSuccess(Game detailedGame, List<DownloadLink> downloadLinks) {
+                runOnUiThread(() -> {
+                    loadingDialog.dismiss();
+                    if (downloadLinks.isEmpty()) {
+                        showError("No download links found for this game.");
+                        return;
+                    }
+                    showDownloadSelectionDialog(detailedGame, downloadLinks);
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    loadingDialog.dismiss();
+                    showError("Error fetching download links: " + error);
+                });
+            }
+        });
+    }
+
+    private void showDownloadSelectionDialog(Game game, List<DownloadLink> downloadLinks) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_download_selection, null);
+        builder.setView(dialogView);
+
+        RecyclerView recyclerView = dialogView.findViewById(R.id.downloadLinksRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        DownloadLinkAdapter adapter = new DownloadLinkAdapter(this, downloadLinks, selectedLink -> {
+            if (!safDownloadManager.hasDownloadLocationConfigured()) {
+                Log.d("LibraryActivity", "No download folder configured, requesting selection");
+                pendingDownloadGame = game;
+                pendingDownloadLink = selectedLink;
+                showFolderSelectionDialog();
+            } else {
+                startGameDownload(game, selectedLink);
+            }
+        });
+        recyclerView.setAdapter(adapter);
+
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
     
     private void showFolderSelectionDialog() {
@@ -616,19 +699,19 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         }
     }
     
-    private void startGameDownload(Game game) {
-        Log.d("LibraryActivity", "Iniciando download para: " + game.getTitle());
+    private void startGameDownload(Game game, DownloadLink downloadLink) {
+        Log.d("LibraryActivity", "Starting download for: " + game.getTitle() + " - " + downloadLink.getName());
         
-        // Iniciar serviço de download
-        Intent downloadIntent = DownloadService.createDownloadIntent(this, game);
+        // Start the download service
+        Intent downloadIntent = DownloadService.createDownloadIntent(this, game, downloadLink);
         startForegroundService(downloadIntent);
         
-        // Atualizar status do jogo
+        // Update game status
         game.setStatus(Game.DownloadStatus.DOWNLOADING);
         databaseHelper.updateGame(game);
         gamesAdapter.updateGame(game);
         
-        Toast.makeText(this, "Download iniciado: " + game.getTitle(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Download started: " + game.getTitle(), Toast.LENGTH_SHORT).show();
     }
     
     @Override

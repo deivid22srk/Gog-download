@@ -66,6 +66,18 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             }
         }
     }
+
+    public void updateGameProgress(long gameId, long bytesDownloaded, long totalBytes) {
+        for (int i = 0; i < filteredGames.size(); i++) {
+            Game game = filteredGames.get(i);
+            if (game.getId() == gameId) {
+                game.setDownloadProgress(bytesDownloaded);
+                game.setTotalSize(totalBytes);
+                notifyItemChanged(i);
+                break;
+            }
+        }
+    }
     
     public void filter(String query) {
         filteredGames.clear();
@@ -170,9 +182,9 @@ public class GamesAdapter extends RecyclerView.Adapter<GamesAdapter.GameViewHold
             
             // Imagem de capa
             if (game.getCoverImage() != null && !game.getCoverImage().isEmpty()) {
-                ImageLoader.loadImage(context, game.getCoverImage(), gameCoverImage);
+                ImageLoader.loadImage(context, game.getCoverImage(), game.getBackgroundImage(), gameCoverImage);
             } else {
-                gameCoverImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                gameCoverImage.setImageResource(R.drawable.ic_image);
             }
             
             // Status e ações baseados no estado do download

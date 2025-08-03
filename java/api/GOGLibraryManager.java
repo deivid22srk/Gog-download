@@ -590,16 +590,16 @@ public class GOGLibraryManager {
      * @param type Tipo do arquivo (opcional)
      * @param callback Callback para o resultado
      */
-    public void getDownloadLink(long gameId, String downlinkId, String type, DownloadLinkCallback callback) {
+    public void getDownloadLink(long gameId, DownloadLink downloadLink, String type, DownloadLinkCallback callback) {
         String authToken = preferencesManager.getAuthToken();
         if (authToken == null || authToken.isEmpty()) {
             callback.onError("Token de autenticação não encontrado");
             return;
         }
         
-        Log.d(TAG, "Getting download link for game " + gameId + ", link " + downlinkId);
+        Log.d(TAG, "Getting download link for game " + gameId + ", link " + downloadLink.getId());
         
-        String url = String.format(DOWNLOAD_LINK_URL, gameId, downlinkId);
+        String url = downloadLink.getUrl();
         
         Request request = new Request.Builder()
                 .url(url)
@@ -625,9 +625,14 @@ public class GOGLibraryManager {
                     Log.d(TAG, "Download link response: " + responseBody);
                     
                     if (response.isSuccessful()) {
+                        Log.d(TAG, "Download link response body: " + responseBody);
                         try {
                             JSONObject jsonResponse = new JSONObject(responseBody);
                             String downloadUrl = jsonResponse.optString("downlink", "");
+
+                            if (downloadUrl.isEmpty()) {
+                                downloadUrl = jsonResponse.optString("url", "");
+                            }
                             
                             if (!downloadUrl.isEmpty()) {
                                 Log.d(TAG, "Download link obtained successfully");

@@ -48,12 +48,16 @@ public class SAFDownloadManager {
                 if (documentFile != null && documentFile.exists() && documentFile.canWrite()) {
                     Log.d(TAG, "Using SAF directory: " + documentFile.getName());
                     return documentFile;
+                } else {
+                    Log.w(TAG, "SAF directory is no longer valid, clearing preference.");
+                    preferencesManager.clearDownloadUri();
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Error accessing SAF directory", e);
+                Log.e(TAG, "Error accessing SAF directory, clearing preference.", e);
+                preferencesManager.clearDownloadUri();
             }
         }
-        
+
         Log.w(TAG, "No valid SAF directory configured");
         return null;
     }
