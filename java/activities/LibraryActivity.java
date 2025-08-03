@@ -31,9 +31,12 @@ import com.example.gogdownloader.utils.ImageLoader;
 import com.example.gogdownloader.utils.SAFDownloadManager;
 import com.example.gogdownloader.utils.PreferencesManager;
 import com.example.gogdownloader.utils.PermissionHelper;
-import androidx.appcompat.widget.SearchView;
 import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+import android.text.TextWatcher;
+import android.text.Editable;
+
 
 import org.json.JSONObject;
 
@@ -51,7 +54,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
     private TextView gameCountText;
     private Button refreshButton;
     private Button retryButton;
-    private SearchView searchView;
+    private TextInputEditText searchEditText;
     private FloatingActionButton settingsFab;
     
     private GOGLibraryManager libraryManager;
@@ -130,7 +133,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         gameCountText = findViewById(R.id.gameCountText);
         refreshButton = findViewById(R.id.refreshButton);
         retryButton = findViewById(R.id.retryButton);
-        searchView = findViewById(R.id.searchView);
+        searchEditText = findViewById(R.id.searchEditText);
         settingsFab = findViewById(R.id.settingsFab);
     }
     
@@ -160,18 +163,21 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         retryButton.setOnClickListener(v -> loadLibrary());
         settingsFab.setOnClickListener(v -> openSettings());
         
-        // Configurar SearchView
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        // Configurar SearchEditText
+        searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                gamesAdapter.filter(query);
-                return true;
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Não é necessário
             }
-            
+
             @Override
-            public boolean onQueryTextChange(String newText) {
-                gamesAdapter.filter(newText);
-                return true;
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                gamesAdapter.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Não é necessário
             }
         });
     }
@@ -341,7 +347,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         } else {
             Log.d("LibraryActivity", "No avatar to load or userAvatar view not found");
             if (userAvatar != null) {
-                userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
+                userAvatar.setImageResource(R.drawable.ic_account_circle);
             }
         }
     }
@@ -466,7 +472,7 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         // Definir avatar padrão
         ImageView userAvatar = findViewById(R.id.userAvatar);
         if (userAvatar != null) {
-            userAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
+            userAvatar.setImageResource(R.drawable.ic_account_circle);
         }
     }
     
