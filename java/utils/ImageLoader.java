@@ -72,16 +72,16 @@ public class ImageLoader {
         }
         
         // Verificar cache primeiro
-        Bitmap cachedBitmap = memoryCache.get(imageUrl);
+        Bitmap cachedBitmap = memoryCache.get(coverImageUrl);
         if (cachedBitmap != null) {
-            Log.d(TAG, "Image found in cache: " + imageUrl);
+            Log.d(TAG, "Image found in cache: " + coverImageUrl);
             imageView.setImageBitmap(cachedBitmap);
             return;
         }
         
         // Definir placeholder enquanto carrega
-        Log.d(TAG, "Setting placeholder for: " + imageUrl);
-        imageView.setImageResource(android.R.drawable.ic_menu_gallery);
+        Log.d(TAG, "Setting placeholder for: " + coverImageUrl);
+        imageView.setImageResource(R.drawable.ic_image);
         
         // Carregar imagem em background
         Log.d(TAG, "Starting background download for: " + coverImageUrl);
