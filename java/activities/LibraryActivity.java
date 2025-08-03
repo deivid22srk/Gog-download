@@ -42,6 +42,7 @@ import com.example.gogdownloader.utils.ImageLoader;
 import com.example.gogdownloader.utils.PermissionHelper;
 import com.example.gogdownloader.utils.PreferencesManager;
 import com.example.gogdownloader.utils.SAFDownloadManager;
+import com.example.gogdownloader.services.InstallationService;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
