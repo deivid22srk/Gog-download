@@ -3,7 +3,9 @@ package com.example.gogdownloader.models;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class DownloadLink {
+import java.io.Serializable;
+
+public class DownloadLink implements Serializable {
     
     public enum FileType {
         INSTALLER,
