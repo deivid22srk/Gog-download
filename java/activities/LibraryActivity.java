@@ -585,18 +585,22 @@ public class LibraryActivity extends AppCompatActivity implements GamesAdapter.O
         libraryManager.loadGameDetails(game.getId(), new GOGLibraryManager.GameDetailsCallback() {
             @Override
             public void onSuccess(Game detailedGame, List<DownloadLink> downloadLinks) {
-                loadingDialog.dismiss();
-                if (downloadLinks.isEmpty()) {
-                    showError("No download links found for this game.");
-                    return;
-                }
-                showDownloadSelectionDialog(detailedGame, downloadLinks);
+                runOnUiThread(() -> {
+                    loadingDialog.dismiss();
+                    if (downloadLinks.isEmpty()) {
+                        showError("No download links found for this game.");
+                        return;
+                    }
+                    showDownloadSelectionDialog(detailedGame, downloadLinks);
+                });
             }
 
             @Override
             public void onError(String error) {
-                loadingDialog.dismiss();
-                showError("Error fetching download links: " + error);
+                runOnUiThread(() -> {
+                    loadingDialog.dismiss();
+                    showError("Error fetching download links: " + error);
+                });
             }
         });
     }
