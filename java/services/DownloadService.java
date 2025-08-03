@@ -445,7 +445,7 @@ public class DownloadService extends Service {
             if (downloadData != null) {
                 DownloadLink link = new DownloadLink();
                 link.setId(downloadData.getAsString("link_id"));
-                link.setFileName(downloadData.getAsString("file_name"));
+                link.setName(downloadData.getAsString("file_name"));
                 link.setUrl(downloadData.getAsString("download_url"));
                 startDownload(game, link);
             }
@@ -478,7 +478,7 @@ public class DownloadService extends Service {
             }
             
             // Remover notificação
-            notificationManager.cancel(NOTIFICATION_ID + (int) gameId);
+            notificationManager.cancel(NOTIFICATION_ID + (int) game.getId());
             
             // Parar foreground se não há mais downloads
             if (activeDownloads.isEmpty() && activeBatchDownloads.isEmpty()) {
@@ -866,7 +866,7 @@ public class DownloadService extends Service {
                     outputStream.flush();
 
                     // Progresso final
-                    onDownloadProgress(game, downloadedBytes, downloadedBytes);
+                    onDownloadProgress(game, downloadedBytes, totalBytes);
                     
                     // Download completo
                     String filePath = outputFile.getUri().toString();
