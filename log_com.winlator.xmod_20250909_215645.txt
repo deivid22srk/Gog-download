@@ -1,0 +1,66 @@
+--------- beginning of main
+09-09 21:56:47.953 I/libc    (25627): SetHeapTaggingLevel: tag level set to 0
+09-09 21:56:47.962 I/m.winlator.xmod(25627): Late-enabling -Xcheck:jni
+09-09 21:56:47.987 I/m.winlator.xmod(25627): Using CollectorTypeCC GC.
+09-09 21:56:48.002 D/nativeloader(25627): Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+09-09 21:56:48.111 D/ApplicationLoaders(25627): Returning zygote-cached class loader: /system/framework/android.test.base.jar
+09-09 21:56:48.111 D/ApplicationLoaders(25627): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+09-09 21:56:48.111 D/ApplicationLoaders(25627): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+09-09 21:56:48.112 W/ziparchive(25627): Unable to open '/data/app/~~znZA5datmx7ySyqYvE9GyQ==/com.winlator.xmod-uzf0w82VR8m9zjNe648dig==/base.dm': No such file or directory
+09-09 21:56:48.112 W/ziparchive(25627): Unable to open '/data/app/~~znZA5datmx7ySyqYvE9GyQ==/com.winlator.xmod-uzf0w82VR8m9zjNe648dig==/base.dm': No such file or directory
+09-09 21:56:48.407 D/nativeloader(25627): Configuring clns-7 for other apk /data/app/~~znZA5datmx7ySyqYvE9GyQ==/com.winlator.xmod-uzf0w82VR8m9zjNe648dig==/base.apk. target_sdk_version=28, uses_libraries=, library_path=/data/app/~~znZA5datmx7ySyqYvE9GyQ==/com.winlator.xmod-uzf0w82VR8m9zjNe648dig==/lib/arm64:/data/app/~~znZA5datmx7ySyqYvE9GyQ==/com.winlator.xmod-uzf0w82VR8m9zjNe648dig==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.winlator.xmod
+09-09 21:56:48.407 D/nativeloader(25627): Extending system_exposed_libraries: libbinauralrenderer_wrapper.qti.so:libhoaeffects.qti.so:libjni_helper.motocameradesktop.so:libimgTuner_jni.motoimagetuner.so:libupdateprof.qti.so:libdiag_system.qti.so:libqape.qti.so:libqesdk_ndk_platform.qti.so:liblistenjni.qti.so
+09-09 21:56:48.437 V/GraphicsEnvironment(25627): Currently set values for:
+09-09 21:56:48.437 V/GraphicsEnvironment(25627):   angle_gl_driver_selection_pkgs=[]
+09-09 21:56:48.437 V/GraphicsEnvironment(25627):   angle_gl_driver_selection_values=[]
+09-09 21:56:48.437 V/GraphicsEnvironment(25627): Global.Settings values are invalid: number of packages: 0, number of values: 0
+09-09 21:56:48.437 V/GraphicsEnvironment(25627): Neither updatable production driver nor prerelease driver is supported.
+09-09 21:56:48.517 I/Typeface(25627): updateThemeFont new=Rookery-Regular;old=sans-serif;new=Rookery-Stacked;old=
+09-09 21:56:48.584 D/AppCompatDelegate(25627): Checking for metadata for AppLocalesMetadataHolderService : Service not found
+09-09 21:56:48.677 W/m.winlator.xmod(25627): Accessing hidden method Landroid/view/View;->computeFitSystemWindows(Landroid/graphics/Rect;Landroid/graphics/Rect;)Z (unsupported, reflection, allowed)
+09-09 21:56:48.677 W/m.winlator.xmod(25627): Accessing hidden method Landroid/view/ViewGroup;->makeOptionalFitsSystemWindows()V (unsupported, reflection, allowed)
+09-09 21:56:48.692 D/CompatChangeReporter(25627): Compat change id reported: 37756858; UID 10583; state: ENABLED
+09-09 21:56:49.176 W/HWUI    (25627): Unknown dataspace 0
+09-09 21:56:49.190 I/Choreographer(25627): Skipped 86 frames!  The application may be doing too much work on its main thread.
+09-09 21:56:49.243 W/libc    (25627): Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+09-09 21:56:49.241 W/m.winlator.xmod(25627): type=1400 audit(0.0:2740014): avc:  denied  { read } for  name="u:object_r:vendor_display_prop:s0" dev="tmpfs" ino=1960 scontext=u:r:untrusted_app_27:s0:c71,c258,c512,c768 tcontext=u:object_r:vendor_display_prop:s0 tclass=file permissive=0 app=com.winlator.xmod
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): QUALCOMM build                   : 923a446bf8, I23d7d7df15
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): Build Date                       : 09/05/24
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): OpenGL ES Shader Compiler Version: EV031.35.01.12
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): Local Branch                     : 
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): Remote Branch                    : refs/tags/AU_LINUX_ANDROID_LA.UM.9.14.11.00.00.571.148
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): Remote Branch                    : NONE
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): Reconstruct Branch               : NOTHING
+09-09 21:56:49.244 I/AdrenoGLES-0(25627): Build Config                     : S P 10.0.7 AArch64
+09-09 21:56:49.245 I/AdrenoGLES-0(25627): Driver Path                      : /vendor/lib64/egl/libGLESv2_adreno.so
+09-09 21:56:49.253 I/AdrenoGLES-0(25627): PFP: 0x016ee201, ME: 0x00000000
+09-09 21:56:49.279 I/HWUI    (25627): setGrContext nullptr-->validptr
+09-09 21:56:49.345 I/HWUI    (25627): Davey! duration=858ms; Flags=1, FrameTimelineVsyncId=838928960, IntendedVsync=1444094392326369, Vsync=1444095109142389, InputEventId=0, HandleInputStart=1444095112574589, AnimationStart=1444095112585370, PerformTraversalsStart=1444095112771203, DrawStart=1444095202985839, FrameDeadline=1444094405993035, FrameInterval=1444095112107245, FrameStartTime=8335070, SyncQueued=1444095217030682, SyncStart=1444095217287766, IssueDrawCommandsStart=1444095218373495, SwapBuffers=1444095249437974, FrameCompleted=1444095251520422, DequeueBufferDuration=12656, QueueBufferDuration=758802, GpuCompleted=1444095250475370, SwapBuffersCompleted=1444095251520422, DisplayPresentTime=0, CommandSubmissionCompleted=1444095249437974, 
+09-09 21:56:49.819 W/m.winlator.xmod(25627): Unable to open libdolphin.so: dlopen failed: library "libdolphin.so" not found.
+09-09 21:56:50.055 W/WindowOnBackDispatcher(25627): sendCancelIfRunning: isInProgress=false callback=androidx.activity.OnBackPressedDispatcher$Api34Impl$createOnBackAnimationCallback$1@4483a
+09-09 21:56:50.249 I/m.winlator.xmod(25627): Compiler allocated 4212KB to compile void android.widget.TextView.<init>(android.content.Context, android.util.AttributeSet, int, int)
+09-09 21:56:50.721 I/m.winlator.xmod(25627): Compiler allocated 5364KB to compile void android.view.ViewRootImpl.performTraversals()
+09-09 21:56:53.316 E/AppCompatSpinner(25627): Cannot set popup background for MODE_DIALOG, ignoring
+09-09 21:56:53.339 D/AndroidRuntime(25627): Shutting down VM
+--------- beginning of crash
+09-09 21:56:53.340 E/AndroidRuntime(25627): FATAL EXCEPTION: main
+09-09 21:56:53.340 E/AndroidRuntime(25627): Process: com.winlator.xmod, PID: 25627
+09-09 21:56:53.340 E/AndroidRuntime(25627): java.lang.NullPointerException: Attempt to invoke virtual method 'void android.widget.Spinner.setSelection(int, boolean)' on a null object reference
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at com.winlator.xmod.core.AppUtils.setSpinnerSelectionFromIdentifier(AppUtils.java:264)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at com.winlator.xmod.ContainerDetailFragment.onCreateView(ContainerDetailFragment.java:329)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at androidx.fragment.app.Fragment.performCreateView(Fragment.java:3114)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at androidx.fragment.app.FragmentStateManager.createView(FragmentStateManager.java:557)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at androidx.fragment.app.FragmentStateManager.moveToExpectedState(FragmentStateManager.java:272)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at androidx.fragment.app.FragmentManager.executeOpsTogether(FragmentManager.java:1943)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at androidx.fragment.app.FragmentManager.removeRedundantOperationsAndExecute(FragmentManager.java:1839)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at androidx.fragment.app.FragmentManager.execPendingActions(FragmentManager.java:1782)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at androidx.fragment.app.FragmentManager$5.run(FragmentManager.java:565)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at android.os.Handler.handleCallback(Handler.java:1001)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at android.os.Handler.dispatchMessage(Handler.java:105)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at android.os.Looper.loopOnce(Looper.java:268)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at android.os.Looper.loop(Looper.java:384)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at android.app.ActivityThread.main(ActivityThread.java:8936)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at java.lang.reflect.Method.invoke(Native Method)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+09-09 21:56:53.340 E/AndroidRuntime(25627): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:907)
+09-09 21:56:53.352 I/Process (25627): Sending signal. PID: 25627 SIG: 9
